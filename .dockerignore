@@ -1,0 +1,18 @@
+# 构建上下文裁剪：只保留源码，避免把依赖与本地数据塞进镜像
+.git
+.idea
+.vscode
+**/__pycache__
+**/*.py[cod]
+backend/.pytest_cache
+backend/.venv
+backend/tests
+backend/.env
+backend/.env.local
+frontend/node_modules
+frontend/dist
+frontend/.env
+frontend/.env.local
+infra/.env
+infra/backups
+*.log

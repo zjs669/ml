@@ -1,0 +1,231 @@
+# 地支「冲、刑、害、破」类关系
+version: relations-rules-0.1.0
+rules:
+  - rule_id: rel.branch.liuchong.zi_wu
+    system: liuchong
+    kind: pair
+    members: [子, 午]
+    relation: 六冲
+    topic: 六冲
+    priority: 15
+    note: 子午相冲，方位相对
+    source_ref: kb://bazi/relations/liuchong
+  - rule_id: rel.branch.liuchong.chou_wei
+    system: liuchong
+    kind: pair
+    members: [丑, 未]
+    relation: 六冲
+    topic: 六冲
+    priority: 15
+    note: 丑未相冲
+    source_ref: kb://bazi/relations/liuchong
+  - rule_id: rel.branch.liuchong.yin_shen
+    system: liuchong
+    kind: pair
+    members: [寅, 申]
+    relation: 六冲
+    topic: 六冲
+    priority: 15
+    note: 寅申相冲
+    source_ref: kb://bazi/relations/liuchong
+  - rule_id: rel.branch.liuchong.mao_you
+    system: liuchong
+    kind: pair
+    members: [卯, 酉]
+    relation: 六冲
+    topic: 六冲
+    priority: 15
+    note: 卯酉相冲
+    source_ref: kb://bazi/relations/liuchong
+  - rule_id: rel.branch.liuchong.chen_xu
+    system: liuchong
+    kind: pair
+    members: [辰, 戌]
+    relation: 六冲
+    topic: 六冲
+    priority: 15
+    note: 辰戌相冲
+    source_ref: kb://bazi/relations/liuchong
+  - rule_id: rel.branch.liuchong.si_hai
+    system: liuchong
+    kind: pair
+    members: [巳, 亥]
+    relation: 六冲
+    topic: 六冲
+    priority: 15
+    note: 巳亥相冲
+    source_ref: kb://bazi/relations/liuchong
+
+  - rule_id: rel.branch.sanxing.yin_si_shen
+    system: sanxing
+    kind: triple
+    members: [寅, 巳, 申]
+    relation: 三刑
+    topic: 相刑
+    priority: 12
+    note: 无恩之刑，寅刑巳、巳刑申、申刑寅
+    source_ref: kb://bazi/relations/xing
+  - rule_id: rel.branch.sanxing.chou_xu_wei
+    system: sanxing
+    kind: triple
+    members: [丑, 戌, 未]
+    relation: 三刑
+    topic: 相刑
+    priority: 12
+    note: 恃势之刑，丑刑戌、戌刑未、未刑丑
+    source_ref: kb://bazi/relations/xing
+  - rule_id: rel.branch.xiangxing.zi_mao
+    system: xiangxing
+    kind: pair
+    members: [子, 卯]
+    relation: 相刑
+    topic: 相刑
+    priority: 12
+    note: 无礼之刑，子卯相刑
+    source_ref: kb://bazi/relations/xing
+  - rule_id: rel.branch.zixing.chen
+    system: zixing
+    kind: self
+    members: [辰]
+    relation: 自刑
+    topic: 相刑
+    priority: 12
+    note: 辰见辰自刑，需两支同现
+    source_ref: kb://bazi/relations/xing
+  - rule_id: rel.branch.zixing.wu
+    system: zixing
+    kind: self
+    members: [午]
+    relation: 自刑
+    topic: 相刑
+    priority: 12
+    note: 午见午自刑
+    source_ref: kb://bazi/relations/xing
+  - rule_id: rel.branch.zixing.you
+    system: zixing
+    kind: self
+    members: [酉]
+    relation: 自刑
+    topic: 相刑
+    priority: 12
+    note: 酉见酉自刑
+    source_ref: kb://bazi/relations/xing
+  - rule_id: rel.branch.zixing.hai
+    system: zixing
+    kind: self
+    members: [亥]
+    relation: 自刑
+    topic: 相刑
+    priority: 12
+    note: 亥见亥自刑
+    source_ref: kb://bazi/relations/xing
+
+  - rule_id: rel.branch.liuhai.zi_wei
+    system: liuhai
+    kind: pair
+    members: [子, 未]
+    relation: 相害
+    topic: 相害
+    priority: 8
+    note: 子未相害
+    source_ref: kb://bazi/relations/hai
+  - rule_id: rel.branch.liuhai.chou_wu
+    system: liuhai
+    kind: pair
+    members: [丑, 午]
+    relation: 相害
+    topic: 相害
+    priority: 8
+    note: 丑午相害
+    source_ref: kb://bazi/relations/hai
+  - rule_id: rel.branch.liuhai.yin_si
+    system: liuhai
+    kind: pair
+    members: [寅, 巳]
+    relation: 相害
+    topic: 相害
+    priority: 8
+    note: 寅巳相害
+    source_ref: kb://bazi/relations/hai
+  - rule_id: rel.branch.liuhai.mao_chen
+    system: liuhai
+    kind: pair
+    members: [卯, 辰]
+    relation: 相害
+    topic: 相害
+    priority: 8
+    note: 卯辰相害
+    source_ref: kb://bazi/relations/hai
+  - rule_id: rel.branch.liuhai.shen_hai
+    system: liuhai
+    kind: pair
+    members: [申, 亥]
+    relation: 相害
+    topic: 相害
+    priority: 8
+    note: 申亥相害
+    source_ref: kb://bazi/relations/hai
+  - rule_id: rel.branch.liuhai.you_xu
+    system: liuhai
+    kind: pair
+    members: [酉, 戌]
+    relation: 相害
+    topic: 相害
+    priority: 8
+    note: 酉戌相害
+    source_ref: kb://bazi/relations/hai
+
+  - rule_id: rel.branch.liupo.zi_you
+    system: liupo
+    kind: pair
+    members: [子, 酉]
+    relation: 相破
+    topic: 相破
+    priority: 5
+    note: 子酉相破
+    source_ref: kb://bazi/relations/po
+  - rule_id: rel.branch.liupo.chou_chen
+    system: liupo
+    kind: pair
+    members: [丑, 辰]
+    relation: 相破
+    topic: 相破
+    priority: 5
+    note: 丑辰相破
+    source_ref: kb://bazi/relations/po
+  - rule_id: rel.branch.liupo.yin_hai
+    system: liupo
+    kind: pair
+    members: [寅, 亥]
+    relation: 相破
+    topic: 相破
+    priority: 5
+    note: 寅亥相破
+    source_ref: kb://bazi/relations/po
+  - rule_id: rel.branch.liupo.mao_wu
+    system: liupo
+    kind: pair
+    members: [卯, 午]
+    relation: 相破
+    topic: 相破
+    priority: 5
+    note: 卯午相破
+    source_ref: kb://bazi/relations/po
+  - rule_id: rel.branch.liupo.si_shen
+    system: liupo
+    kind: pair
+    members: [巳, 申]
+    relation: 相破
+    topic: 相破
+    priority: 5
+    note: 巳申相破
+    source_ref: kb://bazi/relations/po
+  - rule_id: rel.branch.liupo.wei_xu
+    system: liupo
+    kind: pair
+    members: [未, 戌]
+    relation: 相破
+    topic: 相破
+    priority: 5
+    note: 未戌相破
+    source_ref: kb://bazi/relations/po

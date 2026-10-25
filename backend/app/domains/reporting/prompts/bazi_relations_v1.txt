@@ -1,0 +1,25 @@
+任务：刑冲合害专项解读（技能 $skill_key，版本 $skill_version，深度 $depth）。
+
+【盘面事实 facts】
+$facts_json
+
+【已触发的刑冲合害规则 rules】
+$rules_json
+
+【可引用的知识库片段 chunks】
+$chunks_json
+
+【用户的附加主题】
+$topic_text
+
+写作要求：
+1. 先按 position 组合把 rules 分组（例如「年支-月支」），每组一条 observations，
+   rule_ids 必须原样引用输入中的 rule_id。
+2. 输入里若存在 conflicts（合克并见）与 incomplete（三合/三会缺一），
+   必须在 uncertainties 或对应 observation 中点明"这是并列事实，不构成结论"。
+3. traditional_interpretations 只解释"该关系在典籍中的定义与判据"，
+   不解释"对某人有什么后果"；逐条带 citation_ids。
+4. practical_reflections 建议用户记录可观察的人际/工作情境差异，不承诺结果。
+5. 严禁把"合"解释为吉、"冲"解释为凶；不得输出任何事件预测。
+
+现在只输出 JSON。

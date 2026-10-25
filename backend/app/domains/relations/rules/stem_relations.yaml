@@ -1,0 +1,180 @@
+# 天干关系。注意：天干相冲是否采用属体系差异，此处默认启用但标记口径
+version: relations-rules-0.1.0
+rules:
+  - rule_id: rel.stem.wuhe.jia_ji
+    system: wuhe
+    kind: pair
+    members: [甲, 己]
+    relation: 天干五合
+    topic: 天干五合
+    priority: 18
+    element: 土
+    note: 甲己合化土
+    source_ref: kb://bazi/relations/stem_wuhe
+  - rule_id: rel.stem.wuhe.yi_geng
+    system: wuhe
+    kind: pair
+    members: [乙, 庚]
+    relation: 天干五合
+    topic: 天干五合
+    priority: 18
+    element: 金
+    note: 乙庚合化金
+    source_ref: kb://bazi/relations/stem_wuhe
+  - rule_id: rel.stem.wuhe.bing_xin
+    system: wuhe
+    kind: pair
+    members: [丙, 辛]
+    relation: 天干五合
+    topic: 天干五合
+    priority: 18
+    element: 水
+    note: 丙辛合化水
+    source_ref: kb://bazi/relations/stem_wuhe
+  - rule_id: rel.stem.wuhe.ding_ren
+    system: wuhe
+    kind: pair
+    members: [丁, 壬]
+    relation: 天干五合
+    topic: 天干五合
+    priority: 18
+    element: 木
+    note: 丁壬合化木
+    source_ref: kb://bazi/relations/stem_wuhe
+  - rule_id: rel.stem.wuhe.wu_gui
+    system: wuhe
+    kind: pair
+    members: [戊, 癸]
+    relation: 天干五合
+    topic: 天干五合
+    priority: 18
+    element: 火
+    note: 戊癸合化火
+    source_ref: kb://bazi/relations/stem_wuhe
+
+  - rule_id: rel.stem.xiangchong.jia_geng
+    system: stem_xiangchong
+    kind: pair
+    members: [甲, 庚]
+    relation: 天干相冲
+    topic: 天干相冲
+    priority: 10
+    note: 甲庚相冲；部分体系不采用天干相冲，属口径差异
+    source_ref: kb://bazi/relations/stem_chong
+  - rule_id: rel.stem.xiangchong.yi_xin
+    system: stem_xiangchong
+    kind: pair
+    members: [乙, 辛]
+    relation: 天干相冲
+    topic: 天干相冲
+    priority: 10
+    note: 乙辛相冲
+    source_ref: kb://bazi/relations/stem_chong
+  - rule_id: rel.stem.xiangchong.bing_ren
+    system: stem_xiangchong
+    kind: pair
+    members: [丙, 壬]
+    relation: 天干相冲
+    topic: 天干相冲
+    priority: 10
+    note: 丙壬相冲
+    source_ref: kb://bazi/relations/stem_chong
+  - rule_id: rel.stem.xiangchong.ding_gui
+    system: stem_xiangchong
+    kind: pair
+    members: [丁, 癸]
+    relation: 天干相冲
+    topic: 天干相冲
+    priority: 10
+    note: 丁癸相冲
+    source_ref: kb://bazi/relations/stem_chong
+  - rule_id: rel.stem.xiangke.jia_wu
+    system: stem_xiangke
+    kind: pair
+    members: [甲, 戊]
+    relation: 天干相克
+    topic: 天干相克
+    priority: 12
+    note: 甲克戊（克者为官杀，被克者为财，方向固定，不因位置互换）
+    source_ref: kb://bazi/relations/stem_ke
+  - rule_id: rel.stem.xiangke.yi_ji
+    system: stem_xiangke
+    kind: pair
+    members: [乙, 己]
+    relation: 天干相克
+    topic: 天干相克
+    priority: 12
+    note: 乙克己（克者为官杀，被克者为财，方向固定，不因位置互换）
+    source_ref: kb://bazi/relations/stem_ke
+  - rule_id: rel.stem.xiangke.bing_geng
+    system: stem_xiangke
+    kind: pair
+    members: [丙, 庚]
+    relation: 天干相克
+    topic: 天干相克
+    priority: 12
+    note: 丙克庚（克者为官杀，被克者为财，方向固定，不因位置互换）
+    source_ref: kb://bazi/relations/stem_ke
+  - rule_id: rel.stem.xiangke.ding_xin
+    system: stem_xiangke
+    kind: pair
+    members: [丁, 辛]
+    relation: 天干相克
+    topic: 天干相克
+    priority: 12
+    note: 丁克辛（克者为官杀，被克者为财，方向固定，不因位置互换）
+    source_ref: kb://bazi/relations/stem_ke
+  - rule_id: rel.stem.xiangke.wu_ren
+    system: stem_xiangke
+    kind: pair
+    members: [戊, 壬]
+    relation: 天干相克
+    topic: 天干相克
+    priority: 12
+    note: 戊克壬（克者为官杀，被克者为财，方向固定，不因位置互换）
+    source_ref: kb://bazi/relations/stem_ke
+  - rule_id: rel.stem.xiangke.ji_gui
+    system: stem_xiangke
+    kind: pair
+    members: [己, 癸]
+    relation: 天干相克
+    topic: 天干相克
+    priority: 12
+    note: 己克癸（克者为官杀，被克者为财，方向固定，不因位置互换）
+    source_ref: kb://bazi/relations/stem_ke
+  - rule_id: rel.stem.xiangke.geng_jia
+    system: stem_xiangke
+    kind: pair
+    members: [庚, 甲]
+    relation: 天干相克
+    topic: 天干相克
+    priority: 12
+    note: 庚克甲（克者为官杀，被克者为财，方向固定，不因位置互换）
+    source_ref: kb://bazi/relations/stem_ke
+  - rule_id: rel.stem.xiangke.xin_yi
+    system: stem_xiangke
+    kind: pair
+    members: [辛, 乙]
+    relation: 天干相克
+    topic: 天干相克
+    priority: 12
+    note: 辛克乙（克者为官杀，被克者为财，方向固定，不因位置互换）
+    source_ref: kb://bazi/relations/stem_ke
+  - rule_id: rel.stem.xiangke.ren_bing
+    system: stem_xiangke
+    kind: pair
+    members: [壬, 丙]
+    relation: 天干相克
+    topic: 天干相克
+    priority: 12
+    note: 壬克丙（克者为官杀，被克者为财，方向固定，不因位置互换）
+    source_ref: kb://bazi/relations/stem_ke
+  - rule_id: rel.stem.xiangke.gui_ding
+    system: stem_xiangke
+    kind: pair
+    members: [癸, 丁]
+    relation: 天干相克
+    topic: 天干相克
+    priority: 12
+    note: 癸克丁（克者为官杀，被克者为财，方向固定，不因位置互换）
+    source_ref: kb://bazi/relations/stem_ke

@@ -1,0 +1,28 @@
+任务：六爻卦盘解读（技能 $skill_key，版本 $skill_version，深度 $depth）。
+
+【盘面事实 facts】
+$facts_json
+
+【已标记的结构规则 rules】
+$rules_json
+
+【可引用的知识库片段 chunks】
+$chunks_json
+
+【占问原文（可能为空，若为空则只讲盘面）】
+$topic_text
+
+写作要求：
+1. observations 只复述 facts 中已有的字段，顺序固定：起卦方式与时支 → 日辰、月建与旬空 →
+   本卦卦名与卦宫 → 世爻的三项（纳甲、六亲、六神）→ 动爻与变卦 → 互卦。
+   卦名必须与 facts 完全一致，不得简称、不得改写，也不得提及其它卦。
+2. 有动爻时，变卦的六亲仍按**本卦卦宫**说明，不要改用变卦卦宫的五行。
+3. rules 非空时，每条规则单独一行，并在 rule_ids 里带上对应 rule_id；rules 为空不要编造。
+4. traditional_interpretations 只使用 chunks 中的内容，逐条标注 citation_ids；
+   chunks 为空则输出空数组。禁止整段抄写古籍原文。
+5. 占问原文只有在你确知它是什么时才复述；facts 中 question 为 null 时，一律不得猜测用户问的是什么。
+6. uncertainties 必须覆盖：本版本只做装卦层（不取用神、不判旺衰、不给应期）、
+   铜钱起卦为可复现模拟或手动输入、时间起卦只产生单个动爻、以及 facts 中已有的 warnings。
+7. 全文不得出现吉凶、灾祸、成败断言、时限预测与绝对化表述；不得出现"此卦大吉""必成""必败"一类评价。
+
+现在只输出 JSON。

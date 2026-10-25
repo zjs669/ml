@@ -1,0 +1,28 @@
+# 后端镜像：只装运行时依赖，启动前先跑 alembic upgrade head
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONIOENCODING=utf-8 \
+    PIP_NO_CACHE_DIR=1 \
+    TZ=UTC
+
+WORKDIR /app
+
+# curl 仅用于 compose healthcheck
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY backend/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY backend/ ./
+
+# 知识源随镜像一起交付，首次启动后可执行：
+#   docker compose exec backend python -m app.domains.knowledge.ingest --approve
+COPY docs/知识源 /docs/知识源
+
+EXPOSE 8000
+
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers"]

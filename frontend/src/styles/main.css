@@ -1,0 +1,197 @@
+:root {
+  --xs-bg: #f8f7f3;
+  --xs-surface: #ffffff;
+  --xs-surface-muted: #f2efe7;
+  --xs-border: #e3ded1;
+  --xs-text: #2f2b26;
+  --xs-text-muted: #6f675b;
+  --xs-accent: #8a6a3b;
+  /* 第二主色：只用在高光与渐变里，避免页面出现两种“主色” */
+  --xs-accent-2: #c29a5e;
+  --xs-accent-soft: rgba(138, 106, 59, 0.12);
+  /* 统一圆角与阴影，避免各页面各写一套数值 */
+  --xs-radius: 14px;
+  --xs-shadow: 0 10px 26px rgba(120, 98, 60, 0.08);
+  --xs-shadow-hover: 0 18px 40px rgba(120, 98, 60, 0.16);
+  --xs-glow: 0 0 0 1px rgba(255, 255, 255, 0.65) inset;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  color: var(--xs-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Source Han Sans SC', 'Noto Sans SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 背景分三层：暖金与青灰两团柔光 + 竖向底色。固定定位，滚动时不移位 */
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(900px 520px at 10% -10%, rgba(194, 154, 94, 0.2), transparent 62%),
+    radial-gradient(760px 420px at 94% 2%, rgba(110, 138, 150, 0.14), transparent 64%),
+    radial-gradient(680px 520px at 50% 110%, rgba(194, 154, 94, 0.12), transparent 66%),
+    linear-gradient(180deg, #fbf9f4 0%, #f5f2ea 100%);
+  background-attachment: fixed;
+}
+
+/* 细滚动条：默认样式在 Windows 上是灰块，和暖色底很穿 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(138, 106, 59, 0.32) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(138, 106, 59, 0.28);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(138, 106, 59, 0.45);
+  background-clip: content-box;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+a {
+  color: var(--xs-accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* 键盘可达性：只在键盘导航时出现焦点环 */
+:focus-visible {
+  outline: 2px solid rgba(138, 106, 59, 0.55);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: rgba(138, 106, 59, 0.18);
+}
+
+code {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 600;
+  color: var(--xs-text);
+}
+
+.el-button--primary {
+  --el-button-bg-color: var(--xs-accent);
+  --el-button-border-color: var(--xs-accent);
+  --el-button-hover-bg-color: #9c7c4a;
+  --el-button-hover-border-color: #9c7c4a;
+  --el-button-active-bg-color: #775b31;
+  --el-button-active-border-color: #775b31;
+}
+
+/* 控件统一手感的三个细节：圆角、抬升、主按钮投影 */
+.el-button {
+  border-radius: 10px;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+}
+
+.el-button:hover {
+  transform: translateY(-1px);
+}
+
+.el-button--primary {
+  box-shadow: 0 8px 18px rgba(138, 106, 59, 0.22);
+}
+
+.el-button--primary:hover {
+  box-shadow: 0 12px 24px rgba(138, 106, 59, 0.3);
+}
+
+.el-input__wrapper,
+.el-textarea__inner,
+.el-select__wrapper {
+  border-radius: 10px;
+}
+
+.el-tag {
+  border-radius: 999px;
+}
+
+.el-card {
+  border: 1px solid var(--xs-border);
+  box-shadow: var(--xs-shadow);
+}
+
+.el-message {
+  border-radius: 12px;
+}
+
+.el-tabs__item.is-active {
+  color: var(--xs-accent);
+}
+
+.el-tabs__active-bar {
+  background-color: var(--xs-accent);
+}
+
+.el-radio-button__original-radio:checked + .el-radio-button__inner {
+  background-color: var(--xs-accent);
+  border-color: var(--xs-accent);
+  box-shadow: -1px 0 0 0 var(--xs-accent);
+}
+
+.el-radio__input.is-checked .el-radio__inner,
+.el-checkbox__input.is-checked .el-checkbox__inner {
+  background-color: var(--xs-accent);
+  border-color: var(--xs-accent);
+}
+
+.el-radio__label,
+.el-checkbox__label {
+  color: var(--xs-text);
+}
+
+.el-drawer__body {
+  padding: 0 20px 20px;
+}
+
+/* 各页面统一的小标题排版：由页头决定标题字号，页面自己只管间距 */
+.page-head h2 {
+  font-size: 22px;
+  letter-spacing: 1px;
+  line-height: 1.35;
+}
+
+.page-head p {
+  line-height: 1.85;
+}
+
+.el-card,
+.el-dialog {
+  border-radius: var(--xs-radius);
+}
+
+.el-dialog {
+  box-shadow: var(--xs-shadow-hover);
+}

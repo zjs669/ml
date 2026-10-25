@@ -1,0 +1,84 @@
+# 地支「半会」：三会中相邻两支同时出现，只是结构标记，不升格为三会
+# 规则只声明触发事实，不输出吉凶（产品文档 §6.2）
+version: relations-rules-0.1.0
+rules:
+  - rule_id: rel.branch.banhui.yin_mao
+    system: banhui
+    kind: pair
+    members: [寅, 卯]
+    relation: 半会
+    topic: 半会
+    element: 木
+    priority: 8
+    note: 寅卯半会木（三会缺一，仅作结构标记）
+    source_ref: kb://bazi/relations/banhui
+  - rule_id: rel.branch.banhui.mao_chen
+    system: banhui
+    kind: pair
+    members: [卯, 辰]
+    relation: 半会
+    topic: 半会
+    element: 木
+    priority: 8
+    note: 卯辰半会木（三会缺一，仅作结构标记）
+    source_ref: kb://bazi/relations/banhui
+  - rule_id: rel.branch.banhui.si_wu
+    system: banhui
+    kind: pair
+    members: [巳, 午]
+    relation: 半会
+    topic: 半会
+    element: 火
+    priority: 8
+    note: 巳午半会火（三会缺一，仅作结构标记）
+    source_ref: kb://bazi/relations/banhui
+  - rule_id: rel.branch.banhui.wu_wei
+    system: banhui
+    kind: pair
+    members: [午, 未]
+    relation: 半会
+    topic: 半会
+    element: 火
+    priority: 8
+    note: 午未半会火（三会缺一，仅作结构标记）
+    source_ref: kb://bazi/relations/banhui
+  - rule_id: rel.branch.banhui.shen_you
+    system: banhui
+    kind: pair
+    members: [申, 酉]
+    relation: 半会
+    topic: 半会
+    element: 金
+    priority: 8
+    note: 申酉半会金（三会缺一，仅作结构标记）
+    source_ref: kb://bazi/relations/banhui
+  - rule_id: rel.branch.banhui.you_xu
+    system: banhui
+    kind: pair
+    members: [酉, 戌]
+    relation: 半会
+    topic: 半会
+    element: 金
+    priority: 8
+    note: 酉戌半会金（三会缺一，仅作结构标记）
+    source_ref: kb://bazi/relations/banhui
+  - rule_id: rel.branch.banhui.hai_zi
+    system: banhui
+    kind: pair
+    members: [亥, 子]
+    relation: 半会
+    topic: 半会
+    element: 水
+    priority: 8
+    note: 亥子半会水（三会缺一，仅作结构标记）
+    source_ref: kb://bazi/relations/banhui
+  - rule_id: rel.branch.banhui.zi_chou
+    system: banhui
+    kind: pair
+    members: [子, 丑]
+    relation: 半会
+    topic: 半会
+    element: 水
+    priority: 8
+    note: 子丑半会水（三会缺一，仅作结构标记）
+    source_ref: kb://bazi/relations/banhui

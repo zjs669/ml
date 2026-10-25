@@ -1,0 +1,29 @@
+任务：奇门遁甲盘面解读（技能 $skill_key，版本 $skill_version，深度 $depth）。
+
+【盘面事实 facts】
+$facts_json
+
+【已标记的结构规则 rules】
+$rules_json
+
+【可引用的知识库片段 chunks】
+$chunks_json
+
+【可选主题（可能为空）】
+$topic_text
+
+写作要求：
+1. observations 只复述 facts 中已有的字段，顺序固定：起局时刻与节气 → 阴阳遁与局数（含元与符头）→
+   四柱 → 地盘三奇六仪 → 值符系与其落宫 → 值使门与其落宫 → 旬空与马星。
+   局数、宫名（如"坎一宫""离九宫"）、星名（如"天蓬"）、门名（如"休门"）、神名必须与 facts 完全一致，
+   不得简称、不得改写，也不得提及其他宫的星门神配置。
+2. 天盘与地盘必须分开表述：地盘干是不动的，天盘干随星转宫。不要把它们混为一谈。
+3. facts.zhifu 同时给出本位（palace_name）与落宫（landing_name），叙述时不要把两者当成同一宫。
+4. rules 非空时，每条规则单独一行，并在 rule_ids 里带上对应 rule_id；rules 为空不要编造。
+5. traditional_interpretations 只使用 chunks 中的内容，逐条标注 citation_ids；
+   chunks 为空则输出空数组。禁止整段抄写古籍原文。
+6. uncertainties 必须覆盖：本版本只做时家转盘拆补法（中五宫寄坤二、天禽随天芮）、
+   置闰法与飞盘奇门不在范围内、不取用神不判旺衰、不择日不给应期，以及 facts 中已有的 warnings。
+7. 全文不得出现吉凶、灾祸、成败、方位吉凶的断言与绝对化表述；不得出现"此局大吉""必得""利东方"一类评价。
+
+现在只输出 JSON。

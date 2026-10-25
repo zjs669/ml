@@ -1,0 +1,34 @@
+{
+  "skill_key": "bazi.relations.v1",
+  "version": "1.0.0",
+  "domain": "bazi",
+  "title": "刑冲合害专项解读",
+  "description": "当盘面触发合、冲、刑、害、破规则时，逐条解释参与位置与流派处理差异。",
+  "when": {
+    "depths": ["brief", "detailed"],
+    "requires_relations": true,
+    "min_relations": 1,
+    "topics": ["relations", "overview"]
+  },
+  "accepted_day_boundaries": ["zi_hour_policy_a", "zi_hour_policy_b"],
+  "accepted_year_boundaries": ["lichun", "lichun_day"],
+  "retrieval": {
+    "topics": ["六合", "三合", "三会", "六冲", "相刑", "相害", "相破"],
+    "top_k": 8
+  },
+  "output_schema": "report_v1",
+  "prompt_template": "bazi_relations_v1.txt",
+  "max_output_tokens": 4000,
+  "eval_cases": [
+    {
+      "case_id": "relations-detailed",
+      "input": {"depth": "detailed", "relation_count": 3, "topic": "relations", "convention": {"day_boundary": "zi_hour_policy_a", "year_boundary": "lichun"}},
+      "expect": {"skill_key": "bazi.relations.v1"}
+    },
+    {
+      "case_id": "relations-brief-default",
+      "input": {"depth": "brief", "relation_count": 1, "topic": null, "convention": {"day_boundary": "zi_hour_policy_a", "year_boundary": "lichun"}},
+      "expect": {"skill_key": "bazi.relations.v1"}
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# 环境与密钥（绝不入库）
+.env
+.env.local
+# encrypt_secrets 的自动备份里是明文密钥，绝不能提交
+.env.bak
+.env.*.bak
+*.log
+
+# 数据与导出
+*.sqlite3
+exports/
+
+# IDE
+.idea/
+.vscode/
+
+# Node
+node_modules/
+dist/
+.vite/
+npm-debug.log*
+
+# 本地视觉核对截图
+shots/
+
+# 题库与蒸馏产物（体积大、许可证各异，不入库）
+backend/data/bench/
+
+# 外部参考项目（独立仓库，只读，不随本项目分发）
+taibu/

@@ -1,0 +1,24 @@
+任务：四柱总览解读（技能 $skill_key，版本 $skill_version，深度 $depth）。
+
+【盘面事实 facts】
+$facts_json
+
+【已触发的刑冲合害规则 rules】
+$rules_json
+
+【可引用的知识库片段 chunks】
+$chunks_json
+
+【用户的附加主题】
+$topic_text
+
+写作要求：
+1. observations 逐柱复述，顺序固定为年、月、日、时；五行计数一行；
+   若 rules 非空，每条规则单独一行，并在 rule_ids 里带上对应 rule_id。
+2. traditional_interpretations 只使用 chunks 中的内容，逐条标注 citation_ids；
+   同一主题不要重复展开。chunks 为空则输出空数组。
+3. practical_reflections 给出 2–3 条"可以自己去观察验证"的建议，不承诺任何结果。
+4. uncertainties 必须覆盖：口径对结果的影响、流派差异、以及 facts 中已有的 warnings。
+5. 全文不得出现吉凶、灾祸、时限预测与绝对化表述。
+
+现在只输出 JSON。

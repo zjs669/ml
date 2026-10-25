@@ -1,0 +1,34 @@
+{
+  "skill_key": "ziwei.overview.v1",
+  "version": "1.0.0",
+  "domain": "ziwei",
+  "title": "紫微斗数总览解读",
+  "description": "从农历日期、五行局、十二宫与十四主星分布出发解释命盘结构，不含任何吉凶断言与流年推演。",
+  "when": {
+    "depths": ["brief", "detailed"],
+    "requires_relations": false,
+    "min_relations": 0,
+    "topics": ["overview", "nature", "career"]
+  },
+  "accepted_day_boundaries": ["zi_hour_policy_a", "zi_hour_policy_b"],
+  "accepted_year_boundaries": ["lunar_new_year"],
+  "retrieval": {
+    "topics": ["紫微斗数", "命宫", "五行局", "主星", "四化", "大限"],
+    "top_k": 6
+  },
+  "output_schema": "report_v1",
+  "prompt_template": "ziwei_overview_v1.txt",
+  "max_output_tokens": 4000,
+  "eval_cases": [
+    {
+      "case_id": "ziwei-brief-default",
+      "input": {"depth": "brief", "relation_count": 0, "topic": null, "convention": {"year_boundary": "lunar_new_year", "school": "sanhe_default_v1"}},
+      "expect": {"skill_key": "ziwei.overview.v1"}
+    },
+    {
+      "case_id": "ziwei-detailed-career",
+      "input": {"depth": "detailed", "relation_count": 0, "topic": "career", "convention": {"year_boundary": "lunar_new_year", "school": "sanhe_default_v1"}},
+      "expect": {"skill_key": "ziwei.overview.v1"}
+    }
+  ]
+}

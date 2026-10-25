@@ -1,0 +1,38 @@
+[project]
+name = "xuanshu-backend"
+version = "0.1.0"
+description = "玄枢国学研习台 - 后端（排盘引擎 + 知识库 + AI 解读）"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "SQLAlchemy>=2.0",
+    "alembic>=1.13",
+    "PyMySQL>=1.1",
+    "argon2-cffi>=23.1",
+    "PyJWT>=2.8",
+    # 第三方密钥静态加密（Fernet），见 app/core/secrets.py
+    "cryptography>=42.0",
+    "httpx>=0.27",
+    "PyYAML>=6.0",
+    "tzdata>=2024.1",
+    "python-multipart>=0.0.9",
+    # 农历换算：紫微斗数与六爻时间起卦的运行时依赖，不是测试工具
+    "lunar-python>=1.3.10",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"

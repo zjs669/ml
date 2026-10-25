@@ -1,0 +1,157 @@
+# 地支「合」类关系：三会、三合、六合
+# 规则只声明「哪些关系被触发」，不输出任何吉凶结论（产品文档 §6.2）
+version: relations-rules-0.1.0
+rules:
+  - rule_id: rel.branch.sanhui.yin_mao_chen
+    system: sanhui
+    kind: triple
+    members: [寅, 卯, 辰]
+    relation: 三会
+    element: 木
+    topic: 三会
+    priority: 30
+    note: 三会方向为寅卯辰会东方木
+    source_ref: kb://bazi/relations/sanhui
+
+  - rule_id: rel.branch.sanhui.si_wu_wei
+    system: sanhui
+    kind: triple
+    members: [巳, 午, 未]
+    relation: 三会
+    element: 火
+    topic: 三会
+    priority: 30
+    note: 巳午未会南方火
+    source_ref: kb://bazi/relations/sanhui
+
+  - rule_id: rel.branch.sanhui.shen_you_xu
+    system: sanhui
+    kind: triple
+    members: [申, 酉, 戌]
+    relation: 三会
+    element: 金
+    topic: 三会
+    priority: 30
+    note: 申酉戌会西方金
+    source_ref: kb://bazi/relations/sanhui
+
+  - rule_id: rel.branch.sanhui.hai_zi_chou
+    system: sanhui
+    kind: triple
+    members: [亥, 子, 丑]
+    relation: 三会
+    element: 水
+    topic: 三会
+    priority: 30
+    note: 亥子丑会北方水
+    source_ref: kb://bazi/relations/sanhui
+
+  - rule_id: rel.branch.sanhe.shen_zi_chen
+    system: sanhe
+    kind: triple
+    members: [申, 子, 辰]
+    relation: 三合
+    element: 水
+    topic: 三合
+    priority: 25
+    note: 申子辰合水局
+    source_ref: kb://bazi/relations/sanhe
+
+  - rule_id: rel.branch.sanhe.hai_mao_wei
+    system: sanhe
+    kind: triple
+    members: [亥, 卯, 未]
+    relation: 三合
+    element: 木
+    topic: 三合
+    priority: 25
+    note: 亥卯未合木局
+    source_ref: kb://bazi/relations/sanhe
+
+  - rule_id: rel.branch.sanhe.yin_wu_xu
+    system: sanhe
+    kind: triple
+    members: [寅, 午, 戌]
+    relation: 三合
+    element: 火
+    topic: 三合
+    priority: 25
+    note: 寅午戌合火局
+    source_ref: kb://bazi/relations/sanhe
+
+  - rule_id: rel.branch.sanhe.si_you_chou
+    system: sanhe
+    kind: triple
+    members: [巳, 酉, 丑]
+    relation: 三合
+    element: 金
+    topic: 三合
+    priority: 25
+    note: 巳酉丑合金局
+    source_ref: kb://bazi/relations/sanhe
+
+  - rule_id: rel.branch.liuhe.zi_chou
+    system: liuhe
+    kind: pair
+    members: [子, 丑]
+    relation: 六合
+    element: 土
+    topic: 六合
+    priority: 20
+    note: 子丑合化土（是否化气另属流派口径）
+    source_ref: kb://bazi/relations/liuhe
+
+  - rule_id: rel.branch.liuhe.yin_hai
+    system: liuhe
+    kind: pair
+    members: [寅, 亥]
+    relation: 六合
+    element: 木
+    topic: 六合
+    priority: 20
+    note: 寅亥合化木
+    source_ref: kb://bazi/relations/liuhe
+
+  - rule_id: rel.branch.liuhe.mao_xu
+    system: liuhe
+    kind: pair
+    members: [卯, 戌]
+    relation: 六合
+    element: 火
+    topic: 六合
+    priority: 20
+    note: 卯戌合化火
+    source_ref: kb://bazi/relations/liuhe
+
+  - rule_id: rel.branch.liuhe.chen_you
+    system: liuhe
+    kind: pair
+    members: [辰, 酉]
+    relation: 六合
+    element: 金
+    topic: 六合
+    priority: 20
+    note: 辰酉合化金
+    source_ref: kb://bazi/relations/liuhe
+
+  - rule_id: rel.branch.liuhe.si_shen
+    system: liuhe
+    kind: pair
+    members: [巳, 申]
+    relation: 六合
+    element: 水
+    topic: 六合
+    priority: 20
+    note: 巳申合化水
+    source_ref: kb://bazi/relations/liuhe
+
+  - rule_id: rel.branch.liuhe.wu_wei
+    system: liuhe
+    kind: pair
+    members: [午, 未]
+    relation: 六合
+    element: 土
+    topic: 六合
+    priority: 20
+    note: 午未合化土
+    source_ref: kb://bazi/relations/liuhe

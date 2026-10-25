@@ -1,0 +1,611 @@
+{
+  "meta": {
+    "generated_by": "scripts/gen_bazi_cases.py",
+    "algorithm_version": "bazi-engine-0.1.0",
+    "reference": "lunar-python 1.4.8 (MIT)；Asia/Shanghai 下为第二来源核验，其余为回归基线",
+    "tolerance": "节气交节 ±2 分钟内的差异视为容差，其余不一致视为缺陷",
+    "case_count": 24
+  },
+  "cases": [
+    {
+      "id": "normal-1990",
+      "input": {
+        "birth_datetime": "1990-06-15T09:10:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "female",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "庚午",
+        "壬午",
+        "辛亥",
+        "癸巳"
+      ],
+      "source": "lunar-python",
+      "note": "普通日期"
+    },
+    {
+      "id": "verified-2001",
+      "input": {
+        "birth_datetime": "2001-02-04T15:20:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "male",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "辛巳",
+        "庚寅",
+        "戊戌",
+        "庚申"
+      ],
+      "source": "lunar-python",
+      "note": "人工核验样例，含六合/六冲/三刑/相害/相破"
+    },
+    {
+      "id": "lichun-eve",
+      "input": {
+        "birth_datetime": "2024-02-03T12:00:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "male",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "癸卯",
+        "乙丑",
+        "丁酉",
+        "丙午"
+      ],
+      "source": "lunar-python",
+      "note": "立春前一日"
+    },
+    {
+      "id": "lichun-before-instant",
+      "input": {
+        "birth_datetime": "2024-02-04T16:00:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "male",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "癸卯",
+        "乙丑",
+        "戊戌",
+        "庚申"
+      ],
+      "source": "lunar-python",
+      "note": "2024 立春交节 16:26:53，交节前 26 分钟"
+    },
+    {
+      "id": "lichun-after-instant",
+      "input": {
+        "birth_datetime": "2024-02-04T17:00:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "male",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "甲辰",
+        "丙寅",
+        "戊戌",
+        "辛酉"
+      ],
+      "source": "lunar-python",
+      "note": "2024 立春交节后 33 分钟"
+    },
+    {
+      "id": "leap-day-2024",
+      "input": {
+        "birth_datetime": "2024-02-29T08:00:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "female",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "甲辰",
+        "丙寅",
+        "癸亥",
+        "丙辰"
+      ],
+      "source": "lunar-python",
+      "note": "闰年 2 月 29 日"
+    },
+    {
+      "id": "leap-day-2000",
+      "input": {
+        "birth_datetime": "2000-02-29T23:30:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "male",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "庚辰",
+        "戊寅",
+        "戊午",
+        "壬子"
+      ],
+      "source": "lunar-python",
+      "note": "世纪闰日 + 子时边界（policy_a 换日）"
+    },
+    {
+      "id": "century-2000",
+      "input": {
+        "birth_datetime": "2000-01-01T00:30:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "female",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "己卯",
+        "丙子",
+        "戊午",
+        "壬子"
+      ],
+      "source": "lunar-python",
+      "note": "世纪边界 + 早子时"
+    },
+    {
+      "id": "zi-hour-2330",
+      "input": {
+        "birth_datetime": "2016-11-30T23:30:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "male",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "丙申",
+        "己亥",
+        "丁巳",
+        "庚子"
+      ],
+      "source": "lunar-python",
+      "note": "23:30 子时换日（policy_a 与 policy_b 结果不同，见 policy-b 用例）"
+    },
+    {
+      "id": "zi-hour-2330-policy-b",
+      "input": {
+        "birth_datetime": "2016-11-30T23:30:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "male",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_b",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "丙申",
+        "己亥",
+        "丙辰",
+        "庚子"
+      ],
+      "source": "lunar-python",
+      "note": "同一时刻的夜子时口径"
+    },
+    {
+      "id": "midnight-0030",
+      "input": {
+        "birth_datetime": "2016-12-01T00:30:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "male",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "丙申",
+        "己亥",
+        "丁巳",
+        "庚子"
+      ],
+      "source": "lunar-python",
+      "note": "早子时"
+    },
+    {
+      "id": "jingzhe-boundary",
+      "input": {
+        "birth_datetime": "2023-03-06T04:30:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "female",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "癸卯",
+        "甲寅",
+        "癸亥",
+        "甲寅"
+      ],
+      "source": "lunar-python",
+      "note": "2023 惊蛰交节 04:36，交节前 6 分钟（临界告警）"
+    },
+    {
+      "id": "anchor-1949",
+      "input": {
+        "birth_datetime": "1949-10-01T10:00:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "male",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "己丑",
+        "癸酉",
+        "甲子",
+        "己巳"
+      ],
+      "source": "lunar-python",
+      "note": "日柱锚点日（甲子）"
+    },
+    {
+      "id": "early-1900",
+      "input": {
+        "birth_datetime": "1900-01-31T06:00:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "female",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "己亥",
+        "丁丑",
+        "甲辰",
+        "丁卯"
+      ],
+      "source": "lunar-python",
+      "note": "支持范围下界附近"
+    },
+    {
+      "id": "late-2099",
+      "input": {
+        "birth_datetime": "2099-12-31T22:00:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "male",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "己未",
+        "丙子",
+        "壬寅",
+        "辛亥"
+      ],
+      "source": "lunar-python",
+      "note": "支持范围上界附近"
+    },
+    {
+      "id": "dongzhi-1980",
+      "input": {
+        "birth_datetime": "1980-12-21T18:00:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "female",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "庚申",
+        "戊子",
+        "戊辰",
+        "辛酉"
+      ],
+      "source": "lunar-python",
+      "note": "冬至交节附近"
+    },
+    {
+      "id": "moon-landing",
+      "input": {
+        "birth_datetime": "1969-07-20T20:17:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "male",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "己酉",
+        "辛未",
+        "丙申",
+        "戊戌"
+      ],
+      "source": "lunar-python",
+      "note": "历史时点，校验 60 甲子循环"
+    },
+    {
+      "id": "no-time",
+      "input": {
+        "birth_datetime": "1987-09-09T00:00:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "female",
+        "time_known": false,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "丁卯",
+        "己酉",
+        "辛酉",
+        "甲午"
+      ],
+      "source": "lunar-python",
+      "note": "时辰不详：按 12:00 占位并给警告"
+    },
+    {
+      "id": "tz-utc",
+      "input": {
+        "birth_datetime": "1995-08-08T23:59:00",
+        "timezone": "UTC",
+        "gender": "male",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "乙亥",
+        "甲申",
+        "壬申",
+        "庚子"
+      ],
+      "source": "self_baseline",
+      "note": "UTC 时区（本地钟表时间口径）"
+    },
+    {
+      "id": "tz-new-york",
+      "input": {
+        "birth_datetime": "1985-07-04T12:00:00",
+        "timezone": "America/New_York",
+        "gender": "female",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "乙丑",
+        "壬午",
+        "甲辰",
+        "庚午"
+      ],
+      "source": "self_baseline",
+      "note": "America/New_York 时区"
+    },
+    {
+      "id": "solar-time-urumqi",
+      "input": {
+        "birth_datetime": "1992-05-20T08:00:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "male",
+        "time_known": true,
+        "longitude": 87.6,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "true_solar_time",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "壬申",
+        "乙巳",
+        "丙申",
+        "辛卯"
+      ],
+      "source": "lunar-python",
+      "note": "乌鲁木齐经度 87.6°，真太阳时校正"
+    },
+    {
+      "id": "dao-chun-1984",
+      "input": {
+        "birth_datetime": "1984-02-02T22:00:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "female",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "癸亥",
+        "乙丑",
+        "丙寅",
+        "己亥"
+      ],
+      "source": "lunar-python",
+      "note": "1984 立春前后"
+    },
+    {
+      "id": "xmas-2020",
+      "input": {
+        "birth_datetime": "2020-12-25T03:15:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "male",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_a",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "庚子",
+        "戊子",
+        "壬寅",
+        "壬寅"
+      ],
+      "source": "lunar-python",
+      "note": "普通冬季日期"
+    },
+    {
+      "id": "policy-b-midnight",
+      "input": {
+        "birth_datetime": "2005-07-07T00:10:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "female",
+        "time_known": true,
+        "longitude": null,
+        "convention": {
+          "year_boundary": "lichun",
+          "day_boundary": "zi_hour_policy_b",
+          "solar_time": "none",
+          "school": "default_v1",
+          "five_element_weight": "weight-v1"
+        }
+      },
+      "expected_pillars": [
+        "乙酉",
+        "壬午",
+        "壬辰",
+        "庚子"
+      ],
+      "source": "lunar-python",
+      "note": "policy_b 下的早子时"
+    }
+  ]
+}

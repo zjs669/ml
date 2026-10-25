@@ -1,0 +1,343 @@
+{
+  "version": "1.0.0",
+  "school": "jingfang_najia_v1",
+  "note": "全部用例统一用 2026-01-01T12:00:00（乙亥日、子月、午时）手动输入六爻，使日辰/月建/旬空/六神为常量，便于单独核对卦宫、世应与纳甲。期望值由「变爻法重建八宫」独立推导，非引擎输出回填；推导过程见每例 derivation 字段与 tests/test_liuyao_engine.py::test_palace_sequence_matches_flip_rule。",
+  "constants": {
+    "cast_datetime": "2026-01-01T12:00:00",
+    "timezone": "Asia/Shanghai",
+    "day_pillar": "乙亥",
+    "month_build": "子",
+    "xun_kong": ["申", "酉"],
+    "liu_shen": ["青龙", "朱雀", "勾陈", "螣蛇", "白虎", "玄武"]
+  },
+  "cases": [
+    {
+      "case_id": "liuyao-qian-pure",
+      "title": "乾为天（乾宫本宫）",
+      "input": {"method": "manual", "lines": [7, 7, 7, 7, 7, 7]},
+      "expect": {
+        "moving_lines": [],
+        "original": {
+          "name": "乾为天",
+          "palace": "乾",
+          "palace_element": "金",
+          "phase": "本宫",
+          "shi": 6,
+          "ying": 3,
+          "najia": ["甲子", "甲寅", "甲辰", "壬午", "壬申", "壬戌"],
+          "elements": ["水", "木", "土", "火", "金", "土"],
+          "six_relations": ["子孙", "妻财", "父母", "官鬼", "兄弟", "父母"]
+        },
+        "changed": null,
+        "mutual": {"name": "乾为天", "palace": "乾"}
+      },
+      "derivation": "乾宫本宫；乾纳甲壬，内卦甲子甲寅甲辰、外卦壬午壬申壬戌。以金为「我」：金生水为子孙、金克木为妻财、土生金为父母、火克金为官鬼、同金为兄弟。"
+    },
+    {
+      "case_id": "liuyao-kun-pure",
+      "title": "坤为地（坤宫本宫）",
+      "input": {"method": "manual", "lines": [8, 8, 8, 8, 8, 8]},
+      "expect": {
+        "moving_lines": [],
+        "original": {
+          "name": "坤为地",
+          "palace": "坤",
+          "palace_element": "土",
+          "phase": "本宫",
+          "shi": 6,
+          "ying": 3,
+          "najia": ["乙未", "乙巳", "乙卯", "癸丑", "癸亥", "癸酉"],
+          "elements": ["土", "火", "木", "土", "水", "金"],
+          "six_relations": ["兄弟", "父母", "官鬼", "兄弟", "妻财", "子孙"]
+        },
+        "changed": null,
+        "mutual": {"name": "坤为地", "palace": "坤"}
+      },
+      "derivation": "坤纳乙癸，内卦乙未乙巳乙卯（阴卦逆布）、外卦癸丑癸亥癸酉。以土为「我」：同土兄弟、火生土父母、木克土官鬼、土克水妻财、土生金子孙。"
+    },
+    {
+      "case_id": "liuyao-gou-first",
+      "title": "天风姤（乾宫一世）",
+      "input": {"method": "manual", "lines": [8, 7, 7, 7, 7, 7]},
+      "expect": {
+        "moving_lines": [],
+        "original": {
+          "name": "天风姤",
+          "palace": "乾",
+          "palace_element": "金",
+          "phase": "一世",
+          "shi": 1,
+          "ying": 4,
+          "najia": ["辛丑", "辛亥", "辛酉", "壬午", "壬申", "壬戌"],
+          "elements": ["土", "水", "金", "火", "金", "土"],
+          "six_relations": ["父母", "子孙", "兄弟", "官鬼", "兄弟", "父母"]
+        },
+        "changed": null,
+        "mutual": {"name": "乾为天", "palace": "乾"}
+      },
+      "derivation": "乾为天初爻变即天风姤，故为乾宫一世、世初应四；内卦巽纳辛，辛丑辛亥辛酉。互卦取二三四为下、三四五为上，皆阳，仍为乾为天。"
+    },
+    {
+      "case_id": "liuyao-dun-second",
+      "title": "天山遁（乾宫二世）",
+      "input": {"method": "manual", "lines": [8, 8, 7, 7, 7, 7]},
+      "expect": {
+        "moving_lines": [],
+        "original": {
+          "name": "天山遁",
+          "palace": "乾",
+          "palace_element": "金",
+          "phase": "二世",
+          "shi": 2,
+          "ying": 5,
+          "najia": ["丙辰", "丙午", "丙申", "壬午", "壬申", "壬戌"],
+          "elements": ["土", "火", "金", "火", "金", "土"],
+          "six_relations": ["父母", "官鬼", "兄弟", "官鬼", "兄弟", "父母"]
+        },
+        "changed": null,
+        "mutual": {"name": "天风姤", "palace": "乾"}
+      },
+      "derivation": "乾为天初二爻同变即天山遁，乾宫二世、世二应五；内卦艮纳丙，丙辰丙午丙申。"
+    },
+    {
+      "case_id": "liuyao-pi-third",
+      "title": "天地否（乾宫三世）",
+      "input": {"method": "manual", "lines": [8, 8, 8, 7, 7, 7]},
+      "expect": {
+        "moving_lines": [],
+        "original": {
+          "name": "天地否",
+          "palace": "乾",
+          "palace_element": "金",
+          "phase": "三世",
+          "shi": 3,
+          "ying": 6,
+          "najia": ["乙未", "乙巳", "乙卯", "壬午", "壬申", "壬戌"],
+          "elements": ["土", "火", "木", "火", "金", "土"],
+          "six_relations": ["父母", "官鬼", "妻财", "官鬼", "兄弟", "父母"]
+        },
+        "changed": null,
+        "mutual": {"name": "风山渐", "palace": "艮"}
+      },
+      "derivation": "乾为天初三爻同变即天地否，乾宫三世、世三应六；内卦坤纳乙。互卦：二三四爻为阴阴阴（坤）、三四五爻为阴阴阳（艮），上艮下坤即风山渐。"
+    },
+    {
+      "case_id": "liuyao-guan-fourth",
+      "title": "风地观（乾宫四世）",
+      "input": {"method": "manual", "lines": [8, 8, 8, 8, 7, 7]},
+      "expect": {
+        "moving_lines": [],
+        "original": {
+          "name": "风地观",
+          "palace": "乾",
+          "palace_element": "金",
+          "phase": "四世",
+          "shi": 4,
+          "ying": 1,
+          "najia": ["乙未", "乙巳", "乙卯", "辛未", "辛巳", "辛卯"],
+          "elements": ["土", "火", "木", "土", "火", "木"],
+          "six_relations": ["父母", "官鬼", "妻财", "父母", "官鬼", "妻财"]
+        },
+        "changed": null,
+        "mutual": {"name": "山地剥", "palace": "乾"}
+      },
+      "derivation": "乾为天初至四爻同变即风地观，乾宫四世、世四应初；外卦巽纳辛未辛巳辛卯。互卦上艮下坤即山地剥。"
+    },
+    {
+      "case_id": "liuyao-bo-fifth",
+      "title": "山地剥（乾宫五世）",
+      "input": {"method": "manual", "lines": [8, 8, 8, 8, 8, 7]},
+      "expect": {
+        "moving_lines": [],
+        "original": {
+          "name": "山地剥",
+          "palace": "乾",
+          "palace_element": "金",
+          "phase": "五世",
+          "shi": 5,
+          "ying": 2,
+          "najia": ["乙未", "乙巳", "乙卯", "丙戌", "丙子", "丙寅"],
+          "elements": ["土", "火", "木", "土", "水", "木"],
+          "six_relations": ["父母", "官鬼", "妻财", "父母", "子孙", "妻财"]
+        },
+        "changed": null,
+        "mutual": {"name": "坤为地", "palace": "坤"}
+      },
+      "derivation": "乾为天初至五爻同变即山地剥，乾宫五世、世五应二；外卦艮纳丙戌丙子丙寅。互卦六爻皆阴，为坤为地。"
+    },
+    {
+      "case_id": "liuyao-jin-youhun",
+      "title": "火地晋（乾宫游魂）",
+      "input": {"method": "manual", "lines": [8, 8, 8, 7, 8, 7]},
+      "expect": {
+        "moving_lines": [],
+        "original": {
+          "name": "火地晋",
+          "palace": "乾",
+          "palace_element": "金",
+          "phase": "游魂",
+          "shi": 4,
+          "ying": 1,
+          "najia": ["乙未", "乙巳", "乙卯", "己酉", "己未", "己巳"],
+          "elements": ["土", "火", "木", "金", "土", "火"],
+          "six_relations": ["父母", "官鬼", "妻财", "兄弟", "父母", "官鬼"]
+        },
+        "changed": null,
+        "mutual": {"name": "水山蹇", "palace": "兑"}
+      },
+      "derivation": "五世山地剥再回变四爻即火地晋，属游魂、世四应初；外卦离纳己酉己未己巳。互卦上坎下艮即水山蹇。"
+    },
+    {
+      "case_id": "liuyao-dayou-guihun",
+      "title": "火天大有（乾宫归魂）",
+      "input": {"method": "manual", "lines": [7, 7, 7, 7, 8, 7]},
+      "expect": {
+        "moving_lines": [],
+        "original": {
+          "name": "火天大有",
+          "palace": "乾",
+          "palace_element": "金",
+          "phase": "归魂",
+          "shi": 3,
+          "ying": 6,
+          "najia": ["甲子", "甲寅", "甲辰", "己酉", "己未", "己巳"],
+          "elements": ["水", "木", "土", "金", "土", "火"],
+          "six_relations": ["子孙", "妻财", "父母", "兄弟", "父母", "官鬼"]
+        },
+        "changed": null,
+        "mutual": {"name": "泽天夬", "palace": "坤"}
+      },
+      "derivation": "游魂火地晋把内卦复原为乾即火天大有，属归魂、世三应六。互卦上兑下乾即泽天夬。"
+    },
+    {
+      "case_id": "liuyao-zhun",
+      "title": "水雷屯（坎宫二世）",
+      "input": {"method": "manual", "lines": [7, 8, 8, 8, 7, 8]},
+      "expect": {
+        "moving_lines": [],
+        "original": {
+          "name": "水雷屯",
+          "palace": "坎",
+          "palace_element": "水",
+          "phase": "二世",
+          "shi": 2,
+          "ying": 5,
+          "najia": ["庚子", "庚寅", "庚辰", "戊申", "戊戌", "戊子"],
+          "elements": ["水", "木", "土", "金", "土", "水"],
+          "six_relations": ["兄弟", "子孙", "官鬼", "父母", "官鬼", "兄弟"]
+        },
+        "changed": null,
+        "mutual": {"name": "山地剥", "palace": "乾"}
+      },
+      "derivation": "坎为水初二爻同变即水雷屯，坎宫二世、世二应五；内卦震纳庚子庚寅庚辰、外卦坎纳戊申戊戌戊子。以水为「我」：同水兄弟、水生木子孙、土克水官鬼、金生水父母。"
+    },
+    {
+      "case_id": "liuyao-xu-youhun",
+      "title": "水天需（坤宫游魂）",
+      "input": {"method": "manual", "lines": [7, 7, 7, 8, 7, 8]},
+      "expect": {
+        "moving_lines": [],
+        "original": {
+          "name": "水天需",
+          "palace": "坤",
+          "palace_element": "土",
+          "phase": "游魂",
+          "shi": 4,
+          "ying": 1,
+          "najia": ["甲子", "甲寅", "甲辰", "戊申", "戊戌", "戊子"],
+          "elements": ["水", "木", "土", "金", "土", "水"],
+          "six_relations": ["妻财", "官鬼", "兄弟", "子孙", "兄弟", "妻财"]
+        },
+        "changed": null,
+        "mutual": {"name": "火泽睽", "palace": "艮"}
+      },
+      "derivation": "坤宫卦序到泽天夬后回变四爻为水天需，属游魂、世四应初。以土为「我」：土克水妻财、木克土官鬼、同土兄弟、土生金子孙。同一纳甲在水雷屯中因卦宫为水而六亲全异，正好验证「六亲随卦宫变」。"
+    },
+    {
+      "case_id": "liuyao-bi-first",
+      "title": "山火贲（艮宫一世）",
+      "input": {"method": "manual", "lines": [7, 8, 7, 8, 8, 7]},
+      "expect": {
+        "moving_lines": [],
+        "original": {
+          "name": "山火贲",
+          "palace": "艮",
+          "palace_element": "土",
+          "phase": "一世",
+          "shi": 1,
+          "ying": 4,
+          "najia": ["己卯", "己丑", "己亥", "丙戌", "丙子", "丙寅"],
+          "elements": ["木", "土", "水", "土", "水", "木"],
+          "six_relations": ["官鬼", "兄弟", "妻财", "兄弟", "妻财", "官鬼"]
+        },
+        "changed": null,
+        "mutual": {"name": "雷水解", "palace": "震"}
+      },
+      "derivation": "艮为山初爻变即山火贲，艮宫一世、世初应四；内卦离纳己卯己丑己亥（阴卦逆布）、外卦艮纳丙戌丙子丙寅。以土为「我」：木克土官鬼、同土兄弟、土克水妻财。互卦上震下坎即雷水解。"
+    },
+    {
+      "case_id": "liuyao-qian-top-moving",
+      "title": "乾为天上爻动（变卦六亲仍按本卦宫）",
+      "input": {"method": "manual", "lines": [7, 7, 7, 7, 7, 9]},
+      "expect": {
+        "moving_lines": [6],
+        "original": {
+          "name": "乾为天",
+          "palace": "乾",
+          "palace_element": "金",
+          "phase": "本宫",
+          "shi": 6,
+          "ying": 3,
+          "najia": ["甲子", "甲寅", "甲辰", "壬午", "壬申", "壬戌"],
+          "elements": ["水", "木", "土", "火", "金", "土"],
+          "six_relations": ["子孙", "妻财", "父母", "官鬼", "兄弟", "父母"]
+        },
+        "changed": {
+          "name": "泽天夬",
+          "palace": "坤",
+          "palace_element": "土",
+          "phase": "五世",
+          "shi": 5,
+          "ying": 2,
+          "najia": ["甲子", "甲寅", "甲辰", "丁亥", "丁酉", "丁未"],
+          "six_relations": ["子孙", "妻财", "父母", "子孙", "兄弟", "父母"],
+          "changed_line_six_relation": "父母"
+        },
+        "mutual": {"name": "乾为天", "palace": "乾"}
+      },
+      "derivation": "上爻动，外卦由乾转兑，变卦为泽天夬（坤宫五世，宫五行土）。变爻上六纳丁未土：若按本卦乾金推为父母，若误用变卦坤土推亦为父母，故另用下例（泽风大过）做判别；本例主要锁「上爻动而内卦不变」。"
+    },
+    {
+      "case_id": "liuyao-qian-two-moving",
+      "title": "乾为天初上爻同动（多爻动）",
+      "input": {"method": "manual", "lines": [9, 7, 7, 7, 7, 9]},
+      "expect": {
+        "moving_lines": [1, 6],
+        "original": {
+          "name": "乾为天",
+          "palace": "乾",
+          "palace_element": "金",
+          "phase": "本宫",
+          "shi": 6,
+          "ying": 3,
+          "najia": ["甲子", "甲寅", "甲辰", "壬午", "壬申", "壬戌"],
+          "elements": ["水", "木", "土", "火", "金", "土"],
+          "six_relations": ["子孙", "妻财", "父母", "官鬼", "兄弟", "父母"]
+        },
+        "changed": {
+          "name": "泽风大过",
+          "palace": "震",
+          "palace_element": "木",
+          "phase": "游魂",
+          "shi": 4,
+          "ying": 1,
+          "najia": ["辛丑", "辛亥", "辛酉", "丁亥", "丁酉", "丁未"],
+          "six_relations": ["父母", "子孙", "兄弟", "子孙", "兄弟", "父母"],
+          "changed_line_six_relation": "父母"
+        },
+        "mutual": {"name": "乾为天", "palace": "乾"}
+      },
+      "derivation": "初爻与上爻同动，内卦由乾转巽、外卦由乾转兑，即泽风大过（震宫游魂，世四应初）。该例是「变爻六亲以本卦宫为我」的判别用例：变卦震宫属木，若误用变卦宫定六亲，丁未土会得妻财；按本卦乾金则为父母，期望值取父母。"
+    }
+  ]
+}

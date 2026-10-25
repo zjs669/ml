@@ -1,0 +1,34 @@
+{
+  "skill_key": "bazi.overview.v1",
+  "version": "1.0.0",
+  "domain": "bazi",
+  "title": "四柱总览解读",
+  "description": "从四柱、藏干、十神与五行加权出发解释日主结构，不含任何吉凶断言。",
+  "when": {
+    "depths": ["brief", "detailed"],
+    "requires_relations": false,
+    "min_relations": 0,
+    "topics": ["overview", "nature", "career", "study"]
+  },
+  "accepted_day_boundaries": ["zi_hour_policy_a", "zi_hour_policy_b"],
+  "accepted_year_boundaries": ["lichun", "lichun_day"],
+  "retrieval": {
+    "topics": ["日主", "十神", "五行", "藏干"],
+    "top_k": 6
+  },
+  "output_schema": "report_v1",
+  "prompt_template": "bazi_overview_v1.txt",
+  "max_output_tokens": 4000,
+  "eval_cases": [
+    {
+      "case_id": "overview-brief-default",
+      "input": {"depth": "brief", "relation_count": 0, "topic": null, "convention": {"day_boundary": "zi_hour_policy_a", "year_boundary": "lichun"}},
+      "expect": {"skill_key": "bazi.overview.v1"}
+    },
+    {
+      "case_id": "overview-detailed-career",
+      "input": {"depth": "detailed", "relation_count": 0, "topic": "career", "convention": {"day_boundary": "zi_hour_policy_b", "year_boundary": "lichun"}},
+      "expect": {"skill_key": "bazi.overview.v1"}
+    }
+  ]
+}
