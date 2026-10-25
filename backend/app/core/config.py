@@ -143,6 +143,7 @@ class Settings(BaseSettings):
     hepan_algorithm_version: str = "hepan-engine-0.1.0"
     mbti_algorithm_version: str = "mbti-engine-0.1.0"
     dream_algorithm_version: str = "dream-engine-0.1.0"
+    daliuren_algorithm_version: str = "daliuren-engine-0.1.0"
     relations_rule_version: str = "relations-rules-0.1.0"
     # system_v2：在 v1 基础上加「篇幅控制 + 字段级要求」（真实模型实测 v1 易超时/截断）
     prompt_version: str = "system_v2"

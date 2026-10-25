@@ -25,6 +25,8 @@ from app.domains.bazi.engine import calculate as calculate_bazi
 from app.domains.bazi.schemas import ChartResult
 from app.domains.liuyao.engine import calculate as calculate_liuyao
 from app.domains.liuyao.schemas import LiuyaoCalculateIn
+from app.domains.daliuren.engine import calculate as calculate_daliuren
+from app.domains.daliuren.schemas import DaliurenCalculateIn
 from app.domains.dream.engine import calculate as calculate_dream
 from app.domains.dream.schemas import DreamCalculateIn
 from app.domains.hepan.engine import calculate as calculate_hepan
@@ -122,6 +124,10 @@ def _calculate_dream(payload: Any) -> ChartResult:
     return calculate_dream(payload, payload.convention)
 
 
+def _calculate_daliuren(payload: Any) -> ChartResult:
+    return calculate_daliuren(payload, payload.convention)
+
+
 def _calculate_mbti(payload: Any) -> ChartResult:
     return calculate_mbti(payload, payload.convention)
 
@@ -165,6 +171,13 @@ ENGINES: dict[str, EngineSpec] = {
         input_model=ZiweiCalculateIn,
         calculate=_calculate_ziwei,
         schools=("sanhe_default_v1",),
+    ),
+    "daliuren": EngineSpec(
+        domain="daliuren",
+        label="大六壬",
+        input_model=DaliurenCalculateIn,
+        calculate=_calculate_daliuren,
+        schools=("zeike_zhugan_v1",),
     ),
     "dream": EngineSpec(
         domain="dream",
