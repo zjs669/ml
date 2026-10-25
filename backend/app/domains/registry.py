@@ -23,6 +23,8 @@ from app.domains.bazi.engine import calculate as calculate_bazi
 from app.domains.bazi.schemas import ChartResult
 from app.domains.liuyao.engine import calculate as calculate_liuyao
 from app.domains.liuyao.schemas import LiuyaoCalculateIn
+from app.domains.meihua.engine import calculate as calculate_meihua
+from app.domains.meihua.schemas import MeihuaCalculateIn
 from app.domains.qimen.engine import calculate as calculate_qimen
 from app.domains.qimen.schemas import QimenCalculateIn
 from app.domains.tarot.engine import calculate as calculate_tarot
@@ -94,6 +96,10 @@ def _calculate_qimen(payload: Any) -> ChartResult:
     return calculate_qimen(payload, payload.convention)
 
 
+def _calculate_meihua(payload: Any) -> ChartResult:
+    return calculate_meihua(payload, payload.convention)
+
+
 def _calculate_tarot(payload: Any) -> ChartResult:
     return calculate_tarot(payload, payload.convention)
 
@@ -122,6 +128,13 @@ ENGINES: dict[str, EngineSpec] = {
         input_model=ZiweiCalculateIn,
         calculate=_calculate_ziwei,
         schools=("sanhe_default_v1",),
+    ),
+    "meihua": EngineSpec(
+        domain="meihua",
+        label="梅花易数",
+        input_model=MeihuaCalculateIn,
+        calculate=_calculate_meihua,
+        schools=("shaoyong_tongxing_v1",),
     ),
     "ziwei_horoscope": EngineSpec(
         domain="ziwei_horoscope",
