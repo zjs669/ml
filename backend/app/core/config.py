@@ -119,6 +119,8 @@ class Settings(BaseSettings):
     xiaoliuren_algorithm_version: str = "xiaoliuren-engine-0.1.0"
     almanac_algorithm_version: str = "almanac-engine-0.1.0"
     tarot_algorithm_version: str = "tarot-engine-0.1.0"
+    ziwei_horoscope_algorithm_version: str = "ziwei-horoscope-engine-0.1.0"
+    ziwei_flying_algorithm_version: str = "ziwei-flying-engine-0.1.0"
     relations_rule_version: str = "relations-rules-0.1.0"
     # system_v2：在 v1 基础上加「篇幅控制 + 字段级要求」（真实模型实测 v1 易超时/截断）
     prompt_version: str = "system_v2"

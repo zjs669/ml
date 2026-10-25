@@ -31,6 +31,10 @@ from app.domains.xiaoliuren.engine import calculate as calculate_xiaoliuren
 from app.domains.xiaoliuren.schemas import XiaoliurenCalculateIn
 from app.domains.ziwei.engine import calculate as calculate_ziwei
 from app.domains.ziwei.schemas import ZiweiCalculateIn
+from app.domains.ziwei_flying.engine import calculate as calculate_ziwei_flying
+from app.domains.ziwei_flying.schemas import FlyingCalculateIn
+from app.domains.ziwei_horoscope.engine import calculate as calculate_ziwei_horoscope
+from app.domains.ziwei_horoscope.schemas import HoroscopeCalculateIn
 from app.schemas.charts import CalculateIn
 
 
@@ -74,6 +78,14 @@ def _calculate_ziwei(payload: Any) -> ChartResult:
     return calculate_ziwei(payload, payload.convention)
 
 
+def _calculate_ziwei_horoscope(payload: Any) -> ChartResult:
+    return calculate_ziwei_horoscope(payload, payload.convention)
+
+
+def _calculate_ziwei_flying(payload: Any) -> ChartResult:
+    return calculate_ziwei_flying(payload, payload.convention)
+
+
 def _calculate_liuyao(payload: Any) -> ChartResult:
     return calculate_liuyao(payload, payload.convention)
 
@@ -109,6 +121,20 @@ ENGINES: dict[str, EngineSpec] = {
         label="紫微斗数",
         input_model=ZiweiCalculateIn,
         calculate=_calculate_ziwei,
+        schools=("sanhe_default_v1",),
+    ),
+    "ziwei_horoscope": EngineSpec(
+        domain="ziwei_horoscope",
+        label="紫微运限",
+        input_model=HoroscopeCalculateIn,
+        calculate=_calculate_ziwei_horoscope,
+        schools=("sanhe_default_v1",),
+    ),
+    "ziwei_flying": EngineSpec(
+        domain="ziwei_flying",
+        label="紫微飞星",
+        input_model=FlyingCalculateIn,
+        calculate=_calculate_ziwei_flying,
         schools=("sanhe_default_v1",),
     ),
     "liuyao": EngineSpec(
