@@ -17,6 +17,27 @@ class LLMUnavailable(RuntimeError):
     """上游不可用 / 超时 / 返回非 JSON，调用方据此退款并降级。"""
 
 
+@dataclass(frozen=True)
+class ImagePart:
+    """一张待送入视觉模型的内联图片。
+
+    只放 base64 与 MIME，不放文件名、路径或任何用户可识别信息 ——
+    图片元数据（EXIF、GPS、设备型号）必须在上传层剥离后再到这里。
+    """
+
+    base64_data: str
+    mime_type: str
+
+    def __post_init__(self) -> None:
+        if not self.base64_data:
+            raise ValueError("图片 base64 为空")
+        if not self.mime_type.startswith("image/"):
+            raise ValueError(f"MIME 必须是 image/*，收到 {self.mime_type}")
+
+    def data_url(self) -> str:
+        return f"data:{self.mime_type};base64,{self.base64_data}"
+
+
 @dataclass
 class LLMRequest:
     task: str
@@ -24,6 +45,12 @@ class LLMRequest:
     user_prompt: str
     context: dict[str, Any] = field(default_factory=dict)
     max_output_tokens: int = 3000
+    #: 视觉任务用：非空时 provider 必须把 user 消息拼成多段内容（文本 + 图片）
+    images: list[ImagePart] = field(default_factory=list)
+
+    @property
+    def is_vision(self) -> bool:
+        return bool(self.images)
 
 
 @dataclass

@@ -17,3 +17,5 @@ tzdata>=2024.1
 python-multipart>=0.0.9
 # 农历换算：紫微斗数与六爻时间起卦的运行时依赖
 lunar-python>=1.3.10
+# 图片处理：面相/手相上传要剥 EXIF 并重编码，见 app/services/media.py
+Pillow>=10.0

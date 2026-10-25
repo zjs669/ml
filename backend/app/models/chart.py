@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, BigInteger, DateTime, ForeignKey, Index, String, Text
+from sqlalchemy import JSON, BigInteger, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import utcnow
@@ -68,4 +68,44 @@ class ShareLink(Base):
     redact_level: Mapped[str] = mapped_column(String(20), nullable=False, default="basic")
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utcnow)
+
+
+class ChartMedia(Base):
+    """面相 / 手相上传的图片元信息。二进制落文件系统，库里只存哈希与路径。
+
+    为什么不把图片塞进 `chart_records.chart_json`：
+    - 单张 5 MiB 的 base64 会让每行记录膨胀 6.7 MiB，列表查询与备份都被拖垮；
+    - 图片有独立的留存期（比命盘短），混在一起无法单独清理。
+
+    为什么 `chart_id` 可空：先分析后保存是正常流程，分析时命盘还不存在。
+    """
+
+    __tablename__ = "chart_media"
+    __table_args__ = (
+        Index("idx_media_owner_created", "owner_user_id", "created_at"),
+        Index("idx_media_chart", "chart_id"),
+        Index("idx_media_expire", "delete_after"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    owner_user_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    #: 未保存命盘时为空；保存后回填
+    chart_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("chart_records.id", ondelete="SET NULL"), nullable=True
+    )
+    #: face / palm
+    media_kind: Mapped[str] = mapped_column(String(20), nullable=False)
+    mime: Mapped[str] = mapped_column(String(40), nullable=False)
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    width: Mapped[int] = mapped_column(Integer, nullable=False)
+    height: Mapped[int] = mapped_column(Integer, nullable=False)
+    #: 内容哈希（已剥元数据后的字节），同时作为去重键
+    sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    #: 相对 media_root 的路径，形如 "ab/abcd...ef.jpg"
+    storage_key: Mapped[str] = mapped_column(String(120), nullable=False)
+    delete_after: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utcnow)

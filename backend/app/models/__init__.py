@@ -3,7 +3,7 @@
 from app.models.auth_tokens import PasswordResetToken, RefreshToken
 from app.models.base import Base
 from app.models.billing import AuditLog, Feedback, Order, PaymentEvent, UsageLedger
-from app.models.chart import ChartNote, ChartRecord, ShareLink
+from app.models.chart import ChartMedia, ChartNote, ChartRecord, ShareLink
 from app.models.knowledge import KnowledgeChunk, KnowledgeSource, SkillVersion
 from app.models.llm import LlmCall
 from app.models.report import AiReport, ReportFollowup
@@ -17,6 +17,7 @@ __all__ = [
     "RefreshToken",
     "ChartRecord",
     "ChartNote",
+    "ChartMedia",
     "ShareLink",
     "KnowledgeSource",
     "KnowledgeChunk",

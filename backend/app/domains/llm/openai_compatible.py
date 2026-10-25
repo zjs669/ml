@@ -119,11 +119,21 @@ class OpenAICompatibleProvider(LLMProvider):
             )
 
     def _payload(self, request: LLMRequest) -> dict[str, Any]:
+        # 视觉任务：user 消息的 content 必须是「文本段 + 图片段」数组；
+        # 纯文本任务保持字符串形式，避免部分端点不接受数组形态的 content。
+        if request.images:
+            user_content: Any = [{"type": "text", "text": request.user_prompt}]
+            user_content.extend(
+                {"type": "image_url", "image_url": {"url": image.data_url()}}
+                for image in request.images
+            )
+        else:
+            user_content = request.user_prompt
         payload: dict[str, Any] = {
             "model": self.model,
             "messages": [
                 {"role": "system", "content": request.system_prompt},
-                {"role": "user", "content": request.user_prompt},
+                {"role": "user", "content": user_content},
             ],
             "temperature": self.temperature,
             "top_p": 0.9,

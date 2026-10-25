@@ -68,6 +68,22 @@ class Settings(BaseSettings):
     llm_price_input_per_1k: float = 0.0
     llm_price_output_per_1k: float = 0.0
 
+    # ---- 视觉模型（面相 / 手相）----
+    #: 留空时回落到 LLM_* 配置；视觉模型通常与文本模型不同（且更贵），故单列
+    llm_vision_base_url: str = ""
+    llm_vision_api_key: str = ""
+    llm_vision_model: str = ""
+    llm_vision_timeout_seconds: int = 120
+    llm_vision_max_output_tokens: int = 4000
+
+    # ---- 图片存储（面相 / 手相）----
+    #: 图片落盘根目录，留空则用 backend/var/media
+    media_root: str = ""
+    #: 单张图片上限（字节），默认 5 MiB
+    media_max_bytes: int = 5 * 1024 * 1024
+    #: 图片留存天数，到期由清理脚本删除
+    media_retention_days: int = 30
+
     # 额度与付费
     daily_free_report_limit: int = 1
     report_data_retention_days: int = 90
@@ -142,6 +158,32 @@ class Settings(BaseSettings):
         from app.core.secrets import decrypt_value
 
         return decrypt_value(self.smtp_password)
+
+    @property
+    def llm_vision_configured(self) -> bool:
+        """视觉模型是否可用：三项都非空且非占位值才算配置完成。"""
+        return (
+            bool(self.llm_vision_model.strip())
+            and not _is_placeholder(self.llm_vision_api_key_value)
+            and not _is_placeholder(self.llm_vision_base_url or self.llm_base_url)
+        )
+
+    @property
+    def llm_vision_api_key_value(self) -> str:
+        from app.core.secrets import decrypt_value
+
+        return decrypt_value(self.llm_vision_api_key)
+
+    @property
+    def llm_vision_base_url_value(self) -> str:
+        """视觉端点：未单配时回落到文本端点。"""
+        return (self.llm_vision_base_url or self.llm_base_url).rstrip("/")
+
+    @property
+    def media_root_path(self) -> Path:
+        if self.media_root.strip():
+            return Path(self.media_root.strip())
+        return BACKEND_DIR / "var" / "media"
 
     @property
     def llm_configured(self) -> bool:
