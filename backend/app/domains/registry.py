@@ -25,6 +25,8 @@ from app.domains.bazi.engine import calculate as calculate_bazi
 from app.domains.bazi.schemas import ChartResult
 from app.domains.liuyao.engine import calculate as calculate_liuyao
 from app.domains.liuyao.schemas import LiuyaoCalculateIn
+from app.domains.hepan.engine import calculate as calculate_hepan
+from app.domains.hepan.schemas import HepanCalculateIn
 from app.domains.meihua.engine import calculate as calculate_meihua
 from app.domains.meihua.schemas import MeihuaCalculateIn
 from app.domains.qimen.engine import calculate as calculate_qimen
@@ -108,6 +110,10 @@ def _calculate_meihua(payload: Any) -> ChartResult:
     return calculate_meihua(payload, payload.convention)
 
 
+def _calculate_hepan(payload: Any) -> ChartResult:
+    return calculate_hepan(payload, payload.convention)
+
+
 def _calculate_taiyi(payload: Any) -> ChartResult:
     return calculate_taiyi(payload, payload.convention)
 
@@ -147,6 +153,13 @@ ENGINES: dict[str, EngineSpec] = {
         input_model=ZiweiCalculateIn,
         calculate=_calculate_ziwei,
         schools=("sanhe_default_v1",),
+    ),
+    "hepan": EngineSpec(
+        domain="hepan",
+        label="关系合盘",
+        input_model=HepanCalculateIn,
+        calculate=_calculate_hepan,
+        schools=("bazi_cross_v1",),
     ),
     "meihua": EngineSpec(
         domain="meihua",

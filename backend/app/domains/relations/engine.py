@@ -18,6 +18,9 @@ import yaml
 
 RULES_DIR = Path(__file__).resolve().parent / "rules"
 POSITION_NAMES = {"year": "年", "month": "月", "day": "日", "hour": "时"}
+#: 单盘四柱的默认位置集合。合盘等跨盘场景可传入自定义位置名（如 L_year / R_day），
+#: 这样规则判定逻辑不需要为「跨盘」再写一遍。
+DEFAULT_POSITIONS: tuple[str, ...] = ("year", "month", "day", "hour")
 
 
 @dataclass(frozen=True)
@@ -80,9 +83,13 @@ def load_rules() -> tuple[str, tuple[RelationRule, ...]]:
     return "+".join(sorted(versions)), tuple(rules)
 
 
-def _positions_map(pillars: dict[str, dict], field: str) -> dict[str, list[str]]:
+def _positions_map(
+    pillars: dict[str, dict],
+    field: str,
+    positions: tuple[str, ...] = DEFAULT_POSITIONS,
+) -> dict[str, list[str]]:
     mapping: dict[str, list[str]] = {}
-    for position in ("year", "month", "day", "hour"):
+    for position in positions:
         value = pillars.get(position, {}).get(field)
         if value:
             mapping.setdefault(value, []).append(position)
@@ -104,11 +111,19 @@ def _emit(rule: RelationRule, positions: list[str], mapping: dict[str, list[str]
     return payload
 
 
-def detect_relations(pillars: dict[str, dict]) -> dict[str, Any]:
-    """输入 chart_facts["pillars"]，输出触发结果；纯函数，无 IO。"""
+def detect_relations(
+    pillars: dict[str, dict],
+    positions: tuple[str, ...] = DEFAULT_POSITIONS,
+) -> dict[str, Any]:
+    """输入 chart_facts["pillars"]，输出触发结果；纯函数，无 IO。
+
+    `positions` 允许调用方指定要比较哪些位置。单盘用默认四柱；
+    合盘传入 8 个带前缀的位置名（`L_year` … `R_hour`），即可复用同一套规则判定，
+    不必为跨盘另写一份规则循环。
+    """
     _, rules = load_rules()
-    branch_positions = _positions_map(pillars, "branch")
-    stem_positions = _positions_map(pillars, "stem")
+    branch_positions = _positions_map(pillars, "branch", positions)
+    stem_positions = _positions_map(pillars, "stem", positions)
 
     triggered: list[dict[str, Any]] = []
     incomplete: list[dict[str, Any]] = []
