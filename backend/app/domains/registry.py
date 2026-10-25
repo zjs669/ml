@@ -25,6 +25,8 @@ from app.domains.bazi.engine import calculate as calculate_bazi
 from app.domains.bazi.schemas import ChartResult
 from app.domains.liuyao.engine import calculate as calculate_liuyao
 from app.domains.liuyao.schemas import LiuyaoCalculateIn
+from app.domains.dream.engine import calculate as calculate_dream
+from app.domains.dream.schemas import DreamCalculateIn
 from app.domains.hepan.engine import calculate as calculate_hepan
 from app.domains.hepan.schemas import HepanCalculateIn
 from app.domains.mbti.engine import calculate as calculate_mbti
@@ -116,6 +118,10 @@ def _calculate_hepan(payload: Any) -> ChartResult:
     return calculate_hepan(payload, payload.convention)
 
 
+def _calculate_dream(payload: Any) -> ChartResult:
+    return calculate_dream(payload, payload.convention)
+
+
 def _calculate_mbti(payload: Any) -> ChartResult:
     return calculate_mbti(payload, payload.convention)
 
@@ -159,6 +165,13 @@ ENGINES: dict[str, EngineSpec] = {
         input_model=ZiweiCalculateIn,
         calculate=_calculate_ziwei,
         schools=("sanhe_default_v1",),
+    ),
+    "dream": EngineSpec(
+        domain="dream",
+        label="解梦",
+        input_model=DreamCalculateIn,
+        calculate=_calculate_dream,
+        schools=("keyword_lookup_v1",),
     ),
     "hepan": EngineSpec(
         domain="hepan",
