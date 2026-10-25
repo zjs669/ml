@@ -19,6 +19,8 @@ from pydantic import BaseModel
 from app.core.errors import AppError
 from app.domains.almanac.engine import calculate as calculate_almanac
 from app.domains.almanac.schemas import AlmanacCalculateIn
+from app.domains.astrology.engine import calculate as calculate_astrology
+from app.domains.astrology.schemas import AstrologyCalculateIn
 from app.domains.bazi.engine import calculate as calculate_bazi
 from app.domains.bazi.schemas import ChartResult
 from app.domains.liuyao.engine import calculate as calculate_liuyao
@@ -74,6 +76,10 @@ def _calculate_almanac(payload: Any) -> ChartResult:
     return calculate_almanac(payload, payload.convention)
 
 
+def _calculate_astrology(payload: Any) -> ChartResult:
+    return calculate_astrology(payload, payload.convention)
+
+
 def _calculate_bazi(payload: Any) -> ChartResult:
     return calculate_bazi(payload, payload.convention)
 
@@ -115,6 +121,13 @@ def _calculate_xiaoliuren(payload: Any) -> ChartResult:
 
 
 ENGINES: dict[str, EngineSpec] = {
+    "astrology": EngineSpec(
+        domain="astrology",
+        label="西洋占星",
+        input_model=AstrologyCalculateIn,
+        calculate=_calculate_astrology,
+        schools=("simplified_sun_moon_v1",),
+    ),
     "almanac": EngineSpec(
         domain="almanac",
         label="黄历",
