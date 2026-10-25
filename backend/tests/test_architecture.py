@@ -19,7 +19,17 @@ APP = BACKEND / "app"
 FRONTEND = BACKEND.parent / "frontend" / "src"
 
 #: 计算内核：只做纯函数，不碰数据库、网络、模型、计费
-PURE_DOMAINS = {"bazi", "ziwei", "liuyao", "qimen", "calendar_core", "relations"}
+PURE_DOMAINS = {
+    "almanac",
+    "bazi",
+    "calendar_core",
+    "liuyao",
+    "qimen",
+    "relations",
+    "tarot",
+    "xiaoliuren",
+    "ziwei",
+}
 PURE_FORBIDDEN = (
     "app.domains.llm",
     "app.domains.billing",
@@ -115,6 +125,44 @@ def test_skills_loader_has_single_entry() -> None:
         if re.search(r"from app\.domains\.skills import (?!skillfile)", text):
             callers.append(str(path.relative_to(BACKEND)))
     assert not callers, f"技能加载必须走 skillfile：{callers}"
+
+
+def test_generative_domains_do_not_emit_rules() -> None:
+    """生成式域（面相/手相/MBTI 等）不得产出 triggered_rules。
+
+    生成式引擎没有确定性规则可命中，一旦产出 rule_id，报告校验的
+    「rule_id 白名单」就被架空，模型可以借伪规则绕过事实一致性检查。
+    """
+    from app.domains.registry import ENGINES
+
+    offenders = [
+        spec.domain for spec in ENGINES.values() if spec.kind == "generative" and spec.requires_media is False
+    ]
+    # requires_media=False 的生成式域没有输入凭据，属设计缺陷
+    assert not offenders, f"生成式域必须声明 requires_media：{offenders}"
+
+
+def test_every_engine_declares_kind_and_school() -> None:
+    """每个引擎都必须显式声明 kind 与至少一个 school，不允许依赖 dataclass 默认值蒙混。"""
+    from app.domains.registry import ENGINES
+
+    for domain, spec in ENGINES.items():
+        assert spec.kind in ("deterministic", "generative"), f"{domain} 的 kind 非法：{spec.kind}"
+        assert spec.schools, f"{domain} 未声明任何 school"
+        assert spec.label, f"{domain} 缺中文标签"
+
+
+def test_registry_domains_have_algorithm_version() -> None:
+    """每个已注册域必须在 settings 里有独立的 algorithm_version，否则无法回显口径版本。"""
+    from app.core.config import settings
+    from app.domains.registry import ENGINES
+
+    missing = [
+        domain
+        for domain in ENGINES
+        if not getattr(settings, f"{domain}_algorithm_version", None)
+    ]
+    assert not missing, f"这些域缺 algorithm_version 配置：{missing}"
 
 
 def test_frontend_api_layer_does_not_import_ui() -> None:

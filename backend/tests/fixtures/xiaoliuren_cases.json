@@ -1,0 +1,74 @@
+{
+  "version": "1.0.0",
+  "school": "liugong_digui_v1",
+  "note": "覆盖公历/农历两种输入、闰月、时辰边界与六宫循环。期望值由「月上起大安→日上顺数→时上顺数」逐步手推（见 tests/test_xiaoliuren.py 的 _derive，独立于引擎实现），不是引擎输出回填。",
+  "cases": [
+    {
+      "case_id": "xiaoliuren-001-gregorian",
+      "input": {
+        "input_mode": "gregorian",
+        "date": "2026-10-25T00:00:00",
+        "hour": 15
+      },
+      "expect": {
+        "lunar_month": 9,
+        "lunar_day": 16,
+        "shichen": 9,
+        "month_palace": "速喜",
+        "day_palace": "空亡",
+        "result_palace": "留连"
+      }
+    },
+    {
+      "case_id": "xiaoliuren-002-lunar-newyear",
+      "input": {
+        "input_mode": "lunar",
+        "lunar_month": 1,
+        "lunar_day": 1,
+        "hour": 1
+      },
+      "expect": {
+        "lunar_month": 1,
+        "lunar_day": 1,
+        "shichen": 2,
+        "month_palace": "大安",
+        "day_palace": "大安",
+        "result_palace": "留连"
+      }
+    },
+    {
+      "case_id": "xiaoliuren-003-lunar-mid",
+      "input": {
+        "input_mode": "lunar",
+        "lunar_month": 6,
+        "lunar_day": 15,
+        "hour": 12
+      },
+      "expect": {
+        "lunar_month": 6,
+        "lunar_day": 15,
+        "shichen": 7,
+        "month_palace": "空亡",
+        "day_palace": "留连",
+        "result_palace": "留连"
+      }
+    },
+    {
+      "case_id": "xiaoliuren-004-lunar-winter",
+      "input": {
+        "input_mode": "lunar",
+        "lunar_month": 12,
+        "lunar_day": 30,
+        "hour": 23
+      },
+      "expect": {
+        "lunar_month": 12,
+        "lunar_day": 30,
+        "shichen": 1,
+        "month_palace": "空亡",
+        "day_palace": "小吉",
+        "result_palace": "小吉"
+      }
+    }
+  ]
+}

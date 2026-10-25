@@ -49,7 +49,8 @@ def test_calculate_is_anonymous(client: TestClient) -> None:
 
 
 def test_unsupported_domain_returns_400(client: TestClient) -> None:
-    response = client.post("/api/v1/charts/tarot/calculate", json=_payload())
+    # 用一个永远不会被注册的域名，避免新增术数时这条断言失效
+    response = client.post("/api/v1/charts/no-such-domain/calculate", json=_payload())
     assert response.status_code == 400, response.text
     error = response.json()["error"]
     assert error["code"] == "DOMAIN_NOT_SUPPORTED"

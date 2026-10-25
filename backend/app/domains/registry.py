@@ -12,17 +12,23 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel
 
 from app.core.errors import AppError
+from app.domains.almanac.engine import calculate as calculate_almanac
+from app.domains.almanac.schemas import AlmanacCalculateIn
 from app.domains.bazi.engine import calculate as calculate_bazi
 from app.domains.bazi.schemas import ChartResult
 from app.domains.liuyao.engine import calculate as calculate_liuyao
 from app.domains.liuyao.schemas import LiuyaoCalculateIn
 from app.domains.qimen.engine import calculate as calculate_qimen
 from app.domains.qimen.schemas import QimenCalculateIn
+from app.domains.tarot.engine import calculate as calculate_tarot
+from app.domains.tarot.schemas import TarotCalculateIn
+from app.domains.xiaoliuren.engine import calculate as calculate_xiaoliuren
+from app.domains.xiaoliuren.schemas import XiaoliurenCalculateIn
 from app.domains.ziwei.engine import calculate as calculate_ziwei
 from app.domains.ziwei.schemas import ZiweiCalculateIn
 from app.schemas.charts import CalculateIn
@@ -37,6 +43,11 @@ class DomainNotSupported(AppError):
         )
 
 
+#: 引擎类别。deterministic = 纯函数算出可核验的盘面事实；
+#: generative = 只能产出「观察 + 解释」，事实部分只记录用户输入，不放模型输出。
+EngineKind = Literal["deterministic", "generative"]
+
+
 @dataclass(frozen=True)
 class EngineSpec:
     domain: str
@@ -45,6 +56,14 @@ class EngineSpec:
     calculate: Callable[[Any], ChartResult]
     #: 本引擎支持的流派/口径标识，前端据此渲染选项，避免把不支持的流派当成可选项
     schools: tuple[str, ...] = ("default_v1",)
+    #: 引擎类别。生成式域不允许产出 triggered_rules，报告校验据此走不同分支
+    kind: EngineKind = "deterministic"
+    #: 是否需要用户上传图片（面相 / 手相）
+    requires_media: bool = False
+
+
+def _calculate_almanac(payload: Any) -> ChartResult:
+    return calculate_almanac(payload, payload.convention)
 
 
 def _calculate_bazi(payload: Any) -> ChartResult:
@@ -63,7 +82,22 @@ def _calculate_qimen(payload: Any) -> ChartResult:
     return calculate_qimen(payload, payload.convention)
 
 
+def _calculate_tarot(payload: Any) -> ChartResult:
+    return calculate_tarot(payload, payload.convention)
+
+
+def _calculate_xiaoliuren(payload: Any) -> ChartResult:
+    return calculate_xiaoliuren(payload, payload.convention)
+
+
 ENGINES: dict[str, EngineSpec] = {
+    "almanac": EngineSpec(
+        domain="almanac",
+        label="黄历",
+        input_model=AlmanacCalculateIn,
+        calculate=_calculate_almanac,
+        schools=("tongshu_daily_v1",),
+    ),
     "bazi": EngineSpec(
         domain="bazi",
         label="四柱八字",
@@ -90,6 +124,20 @@ ENGINES: dict[str, EngineSpec] = {
         input_model=QimenCalculateIn,
         calculate=_calculate_qimen,
         schools=("chaibu_zhuanpan_v1",),
+    ),
+    "tarot": EngineSpec(
+        domain="tarot",
+        label="塔罗",
+        input_model=TarotCalculateIn,
+        calculate=_calculate_tarot,
+        schools=("rider_waite_v1",),
+    ),
+    "xiaoliuren": EngineSpec(
+        domain="xiaoliuren",
+        label="小六壬",
+        input_model=XiaoliurenCalculateIn,
+        calculate=_calculate_xiaoliuren,
+        schools=("liugong_digui_v1",),
     ),
 }
 
