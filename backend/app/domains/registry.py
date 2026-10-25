@@ -27,6 +27,8 @@ from app.domains.liuyao.engine import calculate as calculate_liuyao
 from app.domains.liuyao.schemas import LiuyaoCalculateIn
 from app.domains.hepan.engine import calculate as calculate_hepan
 from app.domains.hepan.schemas import HepanCalculateIn
+from app.domains.mbti.engine import calculate as calculate_mbti
+from app.domains.mbti.schemas import MbtiCalculateIn
 from app.domains.meihua.engine import calculate as calculate_meihua
 from app.domains.meihua.schemas import MeihuaCalculateIn
 from app.domains.qimen.engine import calculate as calculate_qimen
@@ -114,6 +116,10 @@ def _calculate_hepan(payload: Any) -> ChartResult:
     return calculate_hepan(payload, payload.convention)
 
 
+def _calculate_mbti(payload: Any) -> ChartResult:
+    return calculate_mbti(payload, payload.convention)
+
+
 def _calculate_taiyi(payload: Any) -> ChartResult:
     return calculate_taiyi(payload, payload.convention)
 
@@ -160,6 +166,13 @@ ENGINES: dict[str, EngineSpec] = {
         input_model=HepanCalculateIn,
         calculate=_calculate_hepan,
         schools=("bazi_cross_v1",),
+    ),
+    "mbti": EngineSpec(
+        domain="mbti",
+        label="性格问卷",
+        input_model=MbtiCalculateIn,
+        calculate=_calculate_mbti,
+        schools=("self_authored_four_dim_v1",),
     ),
     "meihua": EngineSpec(
         domain="meihua",
