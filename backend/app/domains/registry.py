@@ -27,6 +27,8 @@ from app.domains.meihua.engine import calculate as calculate_meihua
 from app.domains.meihua.schemas import MeihuaCalculateIn
 from app.domains.qimen.engine import calculate as calculate_qimen
 from app.domains.qimen.schemas import QimenCalculateIn
+from app.domains.taiyi.engine import calculate as calculate_taiyi
+from app.domains.taiyi.schemas import TaiyiCalculateIn
 from app.domains.tarot.engine import calculate as calculate_tarot
 from app.domains.tarot.schemas import TarotCalculateIn
 from app.domains.xiaoliuren.engine import calculate as calculate_xiaoliuren
@@ -100,6 +102,10 @@ def _calculate_meihua(payload: Any) -> ChartResult:
     return calculate_meihua(payload, payload.convention)
 
 
+def _calculate_taiyi(payload: Any) -> ChartResult:
+    return calculate_taiyi(payload, payload.convention)
+
+
 def _calculate_tarot(payload: Any) -> ChartResult:
     return calculate_tarot(payload, payload.convention)
 
@@ -163,6 +169,13 @@ ENGINES: dict[str, EngineSpec] = {
         input_model=QimenCalculateIn,
         calculate=_calculate_qimen,
         schools=("chaibu_zhuanpan_v1",),
+    ),
+    "taiyi": EngineSpec(
+        domain="taiyi",
+        label="太乙九星",
+        input_model=TaiyiCalculateIn,
+        calculate=_calculate_taiyi,
+        schools=("jiuxing_observation_v1",),
     ),
     "tarot": EngineSpec(
         domain="tarot",
