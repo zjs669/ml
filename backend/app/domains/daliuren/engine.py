@@ -144,10 +144,17 @@ def _zeike(lessons: list[dict[str, Any]], day_stem: str) -> dict[str, Any]:
     candidates = downward or upward
     method = "贼克法"
     if not candidates:
+        # 四课无上下克 → 遥克（上神与日干遥相克）或昴星（亦无遥克）。
+        remote = _yaoke(lessons, day_stem)
+        if remote is not None:
+            return remote
         return {
             "implemented": False,
-            "method": None,
-            "reason": "四课之间无上下克，属遥克或昴星等课体，本版本未实现",
+            "method": "昴星法",
+            "reason": (
+                "四课既无上下克、也无遥克，属昴星课体；"
+                "昴星取传需按日干阴阳分取酉上神或天盘酉下神，本版本未实现"
+            ),
             "candidates": [],
             "chuan": None,
         }
@@ -156,25 +163,33 @@ def _zeike(lessons: list[dict[str, Any]], day_stem: str) -> dict[str, Any]:
         from app.domains.calendar_core.jiazi import STEMS
 
         day_yang = STEMS.index(day_stem) % 2 == 0
+        # 比用比较的是**发用者**（上神）与日干的阴阳，不是下神。
+        # 早前实现比较的是 lower，等于拿「被克的一方」去比，选出来的往往是错的那一课。
         same_polarity = [
             item for item in candidates
-            if (BRANCHES.index(item["lower"]) % 2 == 0) == day_yang
+            if (BRANCHES.index(item["upper"]) % 2 == 0) == day_yang
         ]
         if len(same_polarity) == 1:
             candidates = same_polarity
         else:
-            return {
-                "implemented": False,
-                "method": "比用法",
-                "reason": (
-                    f"同类相克 {len(candidates)} 处，比用后仍不唯一（{len(same_polarity)} 处），"
-                    "需用涉害法判定，本版本未实现"
-                ),
-                "candidates": [
-                    {"index": item["index"], "text": item["text"]} for item in candidates
-                ],
-                "chuan": None,
-            }
+            # 比用后仍不唯一 → 进入涉害法：比较各候选的「涉害深浅」。
+            # 涉害深浅 = 上神回到本位的路径上经过几重克，取**最深**者发用。
+            deepest = _shehai_deepest(same_polarity or candidates)
+            if deepest is None:
+                return {
+                    "implemented": False,
+                    "method": "涉害法",
+                    "reason": (
+                        f"同类相克 {len(candidates)} 处，比用后仍不唯一"
+                        f"（{len(same_polarity)} 处），涉害深浅亦相同，本版本不臆断"
+                    ),
+                    "candidates": [
+                        {"index": item["index"], "text": item["text"]} for item in candidates
+                    ],
+                    "chuan": None,
+                }
+            method = "涉害法"
+            candidates = [deepest]
 
     first = candidates[0]
     return {
@@ -184,6 +199,126 @@ def _zeike(lessons: list[dict[str, Any]], day_stem: str) -> dict[str, Any]:
         "candidates": [{"index": item["index"], "text": first["text"]}],
         "first": first,
     }
+
+
+def _yaoke(lessons: list[dict[str, Any]], day_stem: str) -> dict[str, Any] | None:
+    """遥克：四课无上下克时，取四课上神与**日干**遥相克者发用。
+
+    分两种：
+    - 上神克日干 → 蒿矢（外来的克）；
+    - 日干克上神 → 弹射（由内向外）。
+
+    传统上蒿矢优先于弹射。同类不止一处时按比用（与日干阴阳相同者）取舍，
+    仍不唯一则视为无法判定，返回 None 交给调用方 —— 遥克的涉害深浅
+    各家计法差异更大，不再往下推。
+
+    为什么可以这样判：遥克只看「上神与日干」的五行关系，不依赖任何课表，
+    是纯结构判定，因此不属于「凭记忆补课表」的范畴。
+    """
+    from app.domains.calendar_core.jiazi import STEMS
+
+    day_element = C.stem_element(day_stem)
+    haoshi: list[dict[str, Any]] = []   # 上神克日干
+    tanshe: list[dict[str, Any]] = []   # 日干克上神
+    for item in lessons:
+        upper_element = item["upper_element"]
+        if C.is_ke(upper_element, day_element):
+            haoshi.append(item)
+        elif C.is_ke(day_element, upper_element):
+            tanshe.append(item)
+
+    for group, method in ((haoshi, "遥克·蒿矢"), (tanshe, "遥克·弹射")):
+        if not group:
+            continue
+        if len(group) == 1:
+            return {
+                "implemented": True,
+                "method": method,
+                "reason": None,
+                "candidates": [{"index": group[0]["index"], "text": group[0]["text"]}],
+                "first": group[0],
+            }
+        day_yang = STEMS.index(day_stem) % 2 == 0
+        same = [
+            item for item in group
+            if (BRANCHES.index(item["upper"]) % 2 == 0) == day_yang
+        ]
+        if len(same) == 1:
+            return {
+                "implemented": True,
+                "method": method,
+                "reason": None,
+                "candidates": [{"index": same[0]["index"], "text": same[0]["text"]}],
+                "first": same[0],
+            }
+        return None
+    return None
+
+
+def _shehai_deepest(candidates: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """涉害法：比较各候选上神「涉害深浅」，取最深者发用。
+
+    涉害深浅的算法：该候选的上神**从所临的地盘宫位出发，逆行回到自己本位**，
+    途中每遇一个克它的地支计一重。谁的路径上「受克更多」，谁就是「涉害更深」。
+
+    关键点：区间必须是「所临宫 → 本位」，**不能走满一圈**。
+    绕满十二支时每个地支都被数到一次，而五行相克的次数只与五行有关，
+    与起点无关 —— 那样算出来所有候选恒等，涉害法等于永远选不出来。
+    （这一点在实现时踩过：整圈计数的版本让 18 个样本全部退化为「深浅相同」。）
+
+    返回 None 表示深浅相同（或全为 0），此时不臆断，由调用方标未实现。
+    """
+    depths: list[tuple[dict[str, Any], int]] = []
+    for item in candidates:
+        upper = item["upper"]
+        upper_element = C.branch_element(upper)
+        home = BRANCHES.index(upper)          # 上神的本位
+        landed = BRANCHES.index(item["lower"])  # 上神所临的地盘宫位
+        # 从所临宫逆行回本位，走的步数 = (landed − home) mod 12
+        span = (landed - home) % 12
+        depth = 0
+        for step in range(1, span):
+            branch = BRANCHES[(landed - step) % 12]
+            if C.is_ke(C.branch_element(branch), upper_element):
+                depth += 1
+        depths.append((item, depth))
+
+    best_depth = max(depth for _, depth in depths)
+    winners = [item for item, depth in depths if depth == best_depth]
+    if best_depth == 0 or len(winners) != 1:
+        return None
+    return winners[0]
+
+
+def _fuyin_first_lesson(lessons: list[dict[str, Any]]) -> dict[str, Any]:
+    """伏吟取初传：四课上下神相同，无克可取，传统上取**干上神**（一课上神）发用。
+
+    伏吟课体的中传/末传仍按「上所临之支」递推，与贼克法一致；
+    差别只在初传的选取依据。
+    """
+    return lessons[0]
+
+
+def _fanyin(
+    lessons: list[dict[str, Any]],
+    sky: dict[str, str],
+    day_stem: str,
+) -> dict[str, Any]:
+    """返吟取初传：月将与时支相冲，四课两两相冲。
+
+    返吟课体在传统上「有克取克、无克取马」；本版本只做前半段（取克），
+    无克时如实标为未实现，不用「取马」等需要额外规则的路径硬补。
+    """
+    result = _zeike(lessons, day_stem)
+    if result["implemented"]:
+        result["method"] = "返吟"
+        result["reason"] = None
+    else:
+        result["method"] = "返吟"
+        result["reason"] = (
+            "返吟课体且四课无上下克：传统上须取驿马发用，该规则本版本未实现"
+        )
+    return result
 
 
 def calculate(inp: DaliurenInput, conv: DaliurenConvention | None = None) -> ChartResult:
@@ -233,7 +368,25 @@ def calculate(inp: DaliurenInput, conv: DaliurenConvention | None = None) -> Cha
     lessons = _four_lessons(day_stem, day_branch, sky)
 
     # ---- 5. 三传 ----
-    zeike = _zeike(lessons, day_stem)
+    # 伏吟 / 返吟是**结构性**课体，先于贼克判定：
+    # 伏吟时四课上下神相同、无克可取，若不先拦下来会被误判成「无上下克」。
+    # 返吟时四课两两相冲，虽可能取到克，但传统上按返吟课体处理。
+    fuyin = all(earth == sky[earth] for earth in BRANCHES)
+    fanyin = all(
+        BRANCHES[(BRANCHES.index(earth) + 6) % 12] == sky[earth] for earth in BRANCHES
+    )
+    if fuyin:
+        zeike = {
+            "implemented": True,
+            "method": "伏吟",
+            "reason": None,
+            "candidates": [],
+            "first": _fuyin_first_lesson(lessons),
+        }
+    elif fanyin:
+        zeike = _fanyin(lessons, sky, day_stem)
+    else:
+        zeike = _zeike(lessons, day_stem)
     chuan: dict[str, Any] | None = None
     if zeike["implemented"]:
         first = zeike["first"]
