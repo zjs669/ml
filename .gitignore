@@ -36,3 +36,7 @@ backend/data/bench/
 
 # 外部参考项目（独立仓库，只读，不随本项目分发）
 taibu/
+
+# 运行时产物：邮件发信箱、媒体文件、盘面校验样本
+backend/var/
+!backend/var/.gitkeep
