@@ -27,7 +27,7 @@ from app.domains.billing import ledger
 from app.domains.llm.base import ImagePart, LLMRequest, LLMResponse, LLMUnavailable
 from app.domains.llm.openai_compatible import OpenAICompatibleProvider
 from app.domains.vision import prompts
-from app.models.chart import ChartMedia, ChartRecord
+from app.models import ChartMedia, ChartRecord
 from app.repositories import chart_repo
 from app.services import media
 

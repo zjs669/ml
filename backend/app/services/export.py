@@ -11,8 +11,8 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.chart import ChartRecord
-from app.models.report import AiReport
+from app.models import ChartRecord
+from app.models import AiReport
 
 AI_NOTICE = "本内容由「玄枢国学研习台」生成，含 AI 生成的解释文本，仅供传统文化研习与娱乐参考，不构成医疗、法律、投资或其他专业建议。"
 

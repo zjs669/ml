@@ -31,6 +31,16 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 DATASET_DIR = BACKEND_DIR / "data" / "bench" / "MingLi-Bench"
 DATA_JSON = DATASET_DIR / "data" / "data.json"
 
+#: 题库数据不入库（体积大、第三方许可证），本地没有时提示怎么取
+_FETCH_HINT = f"""\
+题库数据不在仓库里（backend/data/ 已 gitignore）。需要跑评测时先取数据：
+
+    git clone https://github.com/DestinyLinker/MingLi-Bench {DATASET_DIR}
+    python -m scripts.prepare_bench
+
+只要不跑题库评测，可以完全不装这份数据 —— 排盘、报告、登录、支付都不依赖它。
+详见 docs/题库与训练数据.md。"""
+
 
 def _row(case) -> dict:
     return {
@@ -55,7 +65,7 @@ def main(argv: list[str] | None = None) -> int:
 
     path = Path(args.data)
     if not path.is_file():
-        print(f"找不到 {path}；先按 docs/题库与蒸馏.md 的说明取数据")
+        print(_FETCH_HINT)
         return 2
 
     loaded = mingli.load(path)

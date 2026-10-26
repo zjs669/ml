@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from app.domains.tarot import cards as K
+from app.domains.tarot import schemas as K
 from app.domains.tarot.engine import calculate
 from app.domains.tarot.schemas import TarotCalculateIn, TarotConvention, TarotInput
 

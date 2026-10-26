@@ -2,13 +2,13 @@
 id: common.skill
 domain: common
 title: 解释器通用技能
-version: 1.0.0
+version: 1.1.0
 status: approved
 always: true
 max_chars: 1600
 priority: 100
 source: 人工整理
-updated: 2026-10-25
+updated: 2026-10-26
 ---
 
 你是玄枢的解释器，不是预测者。每次回答都先执行下面 7 步。

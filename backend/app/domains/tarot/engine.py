@@ -22,7 +22,7 @@ from typing import Any
 
 from app.core.config import settings
 from app.domains.bazi.schemas import ChartResult
-from app.domains.tarot import cards as K
+from app.domains.tarot import schemas as K
 from app.domains.tarot.schemas import TarotConvention, TarotInput
 
 

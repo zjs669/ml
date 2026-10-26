@@ -22,7 +22,7 @@ from lunar_python import Solar
 
 from app.domains.bazi.engine import calculate
 from app.domains.bazi.schemas import BaziInput, Convention
-from app.domains.calendar_core.solar_time import true_solar_offset_minutes
+from app.domains.calendar_core.astronomy import true_solar_offset_minutes
 
 OUTPUT = Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "bazi_cases.json"
 BEIJING = ZoneInfo("Asia/Shanghai")

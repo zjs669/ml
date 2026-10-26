@@ -8,10 +8,10 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user
 from app.core.db import get_session
 from app.core.errors import AppError
-from app.core.ratelimit import client_key, hit
+from app.core.throttle import client_key, hit
 from app.domains.reporting import followup as followup_service
 from app.domains.reporting import service as reporting
-from app.models.user import User
+from app.models import User
 from app.repositories import chart_repo, report_repo
 from app.schemas.report import (
     FollowupIn,

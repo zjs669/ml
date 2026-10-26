@@ -173,3 +173,45 @@ def test_frontend_api_layer_does_not_import_ui() -> None:
             if specifier.startswith(("@/pages", "@/components", "@/router", "@/stores")):
                 violations.append(f"{path.relative_to(FRONTEND)} -> {specifier}")
     assert not violations, "src/api 不得反向依赖 UI/路由/状态：\n" + "\n".join(violations)
+
+
+def test_frontend_domain_list_has_single_source() -> None:
+    """术数入口清单只能在 `config/domains.ts` 里维护一份。
+
+    本轮重构前同一份清单存在三处（ToolsPage 的 19 个对象、HomePage 的 5 个对象、
+    router 的 19 条记录），新增域漏改就会出现「工具页有、顶部导航没有」。
+    现在导航/首页/工具页都从 `config/domains.ts` 派生，这里防止有人再写第二份。
+    """
+    offenders: list[str] = []
+    for path in (FRONTEND / "pages").rglob("*.vue"):
+        text = path.read_text(encoding="utf-8")
+        # 页面里直接写死 /almanac 这类域路由，说明它在维护自己的入口清单
+        hardcoded = re.findall(
+            r"(?:to|path|route):\s*'/(almanac|xiaoliuren|meihua|daliuren|taiyi|tarot|astrology|"
+            r"ziwei-horoscope|ziwei-flying|dream|hepan|mbti)\b",
+            text,
+        )
+        if len(hardcoded) >= 2:
+            offenders.append(f"{path.relative_to(FRONTEND)}: 硬编码 {len(hardcoded)} 个域路由")
+    assert not offenders, (
+        "术数入口清单必须来自 @/config/domains，不要在页面里再写一份：\n" + "\n".join(offenders)
+    )
+
+
+def test_generic_domain_pages_are_merged() -> None:
+    """同构域必须共用 `DomainChartPage`，不许再出现 12 行的薄壳页。
+
+    薄壳页的问题不是行数少，而是「新增一个同构域要新建文件 + 加路由 + 加 import」
+    三处都要动，差异只有一个字符串。
+    """
+    merged = FRONTEND / "pages" / "DomainChartPage.vue"
+    assert merged.is_file(), "DomainChartPage.vue 是 10 个同构域的合并版，不能删"
+
+    thin: list[str] = []
+    for path in (FRONTEND / "pages").rglob("*.vue"):
+        if path.name in ("DomainChartPage.vue", "NotFoundPage.vue"):
+            continue
+        lines = path.read_text(encoding="utf-8").splitlines()
+        if len(lines) < 20 and "GenericChartPage" in "\n".join(lines):
+            thin.append(path.name)
+    assert not thin, f"这些薄壳页应并入 DomainChartPage：{thin}"

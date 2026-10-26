@@ -2,13 +2,13 @@
 id: qimen.skill
 domain: qimen
 title: 奇门解读技能
-version: 1.0.0
+version: 1.1.0
 status: approved
 always: true
 max_chars: 2400
 priority: 100
 source: 人工整理
-updated: 2026-10-25
+updated: 2026-10-26
 ---
 
 ## 一、读盘顺序

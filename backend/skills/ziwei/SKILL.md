@@ -2,13 +2,13 @@
 id: ziwei.skill
 domain: ziwei
 title: 紫微解读技能
-version: 1.0.0
+version: 1.1.0
 status: approved
 always: true
 max_chars: 2600
 priority: 100
 source: 人工整理 + 题库蒸馏
-updated: 2026-10-25
+updated: 2026-10-26
 ---
 
 ## 一、先说清四化的层次

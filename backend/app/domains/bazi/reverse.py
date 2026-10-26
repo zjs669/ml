@@ -22,6 +22,7 @@ from app.core.config import settings
 from app.core.errors import AppError
 from app.domains.bazi.constants import DayBoundaryNote
 from app.domains.bazi.schemas import Convention
+from app.domains.calendar_core.astronomy import gregorian_to_jdn, true_solar_offset_minutes
 from app.domains.calendar_core.jiazi import (
     BRANCHES,
     JIE_TO_MONTH_BRANCH,
@@ -35,10 +36,8 @@ from app.domains.calendar_core.jiazi import (
     pillar_text,
     year_pillar_index,
 )
-from app.domains.calendar_core.julian import gregorian_to_jdn
 from app.domains.calendar_core.solar_terms import SolarTermService
-from app.domains.calendar_core.solar_time import true_solar_offset_minutes
-from app.schemas.reverse import PillarQuery
+from app.schemas.charts import PillarQuery
 
 POSITIONS = ("year", "month", "day", "hour")
 POSITION_LABELS = {"year": "年柱", "month": "月柱", "day": "日柱", "hour": "时柱"}

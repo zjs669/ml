@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.db import utcnow
 from app.core.errors import QuotaExceeded
-from app.models.billing import UsageLedger
+from app.models import UsageLedger
 
 BEIJING = ZoneInfo("Asia/Shanghai")
 

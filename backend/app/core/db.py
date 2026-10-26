@@ -1,4 +1,9 @@
-"""数据库会话与引擎。同步 SQLAlchemy 2.0（见计划 D7）。"""
+"""数据库引擎、会话与声明式基类。同步 SQLAlchemy 2.0（见计划 D7）。
+
+`Base` 放在这里而不是 `models/base.py`：它只有 8 行，却是 9 个模型文件的
+共同依赖。单独一个文件时，每个模型都要多一行 import，而它本身没有任何
+独立语义（就是个 `DeclarativeBase` 子类），跟着引擎走更自然。
+"""
 
 from __future__ import annotations
 
@@ -6,9 +11,15 @@ from collections.abc import Iterator
 from datetime import datetime, timezone
 
 from sqlalchemy import create_engine, event
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from app.core.config import settings
+
+
+class Base(DeclarativeBase):
+    """全局声明式基类。所有表通过 Alembic 迁移创建，禁止启动时 create_all。"""
+
+    pass
 
 
 def utcnow() -> datetime:

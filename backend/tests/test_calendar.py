@@ -8,7 +8,12 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from app.domains.bazi.engine import lichun_of_year
-from app.domains.calendar_core import astronomy, julian, solar_terms, solar_time
+from app.domains.calendar_core import astronomy, solar_terms
+
+# 儒略日与真太阳时已并入 `calendar_core.astronomy`（原 `julian.py` / `solar_time.py`）。
+# 这里保留别名，让测试读起来仍能区分「纯日期换算」与「时刻校正」两组函数。
+julian = astronomy
+solar_time = astronomy
 from app.domains.calendar_core.jiazi import (
     BRANCHES,
     STEMS,

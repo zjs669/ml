@@ -13,7 +13,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from app.domains.dream import lexicon as K
+from app.domains.dream import engine as lexicon
 from app.domains.dream.engine import _extract, calculate
 from app.domains.dream.schemas import DreamCalculateIn, DreamInput
 
@@ -26,30 +26,30 @@ def _run(text: str, **kwargs):
 # ---- 词表结构 ----
 
 def test_entries_non_empty() -> None:
-    assert len(K.ENTRIES) >= 40
+    assert len(lexicon.ENTRIES) >= 40
 
 
 def test_keywords_unique() -> None:
-    keywords = [item.keyword for item in K.ENTRIES]
+    keywords = [item.keyword for item in lexicon.ENTRIES]
     assert len(keywords) == len(set(keywords))
 
 
 def test_aliases_do_not_collide() -> None:
     """别名之间、别名与主词之间都不能重复，否则匹配会串到别的条目。"""
     seen: dict[str, str] = {}
-    for item in K.ENTRIES:
+    for item in lexicon.ENTRIES:
         for term in (item.keyword, *item.aliases):
             assert term not in seen, f"「{term}」同时属于 {seen.get(term)} 与 {item.keyword}"
             seen[term] = item.keyword
 
 
 def test_categories_are_declared() -> None:
-    for item in K.ENTRIES:
-        assert item.category in K.CATEGORIES, item.keyword
+    for item in lexicon.ENTRIES:
+        assert item.category in lexicon.CATEGORIES, item.keyword
 
 
 def test_every_entry_has_traditional_note() -> None:
-    for item in K.ENTRIES:
+    for item in lexicon.ENTRIES:
         assert item.traditional.strip(), item.keyword
 
 
@@ -112,7 +112,7 @@ def test_keywords_grouped_by_category() -> None:
 def test_category_order_follows_constant() -> None:
     facts = _run("梦见蛇在水里游")
     order = [item["category"] for item in facts["categories"]]
-    assert order == [name for name in K.CATEGORIES if name in order]
+    assert order == [name for name in lexicon.CATEGORIES if name in order]
 
 
 def test_traditional_can_be_disabled() -> None:
@@ -184,7 +184,7 @@ def test_no_prediction_in_warnings() -> None:
     result = calculate(inp)
     banned = ("预示着", "将会", "一定会", "主吉", "主凶")
     for item in result.warnings:
-        if item == K.SCHOOL_NOTE:
+        if item == lexicon.SCHOOL_NOTE:
             continue
         for word in banned:
             assert word not in item, f"警告出现预示式表述「{word}」：{item}"

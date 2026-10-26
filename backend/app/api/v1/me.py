@@ -5,22 +5,30 @@ from __future__ import annotations
 import json
 
 from fastapi import APIRouter, Depends, Response
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_optional_user
 from app.core.db import get_session, utcnow
 from app.core.errors import Unauthorized
 from app.core.security import verify_password
 from app.domains.billing import ledger
 from app.domains.billing import orders as order_service
-from app.models.billing import AuditLog, UsageLedger
-from app.models.chart import ChartRecord
-from app.models.report import AiReport
-from app.models.user import User, UserConsent
+from app.models import AuditLog, Feedback, UsageLedger
+from app.models import ChartRecord
+from app.models import AiReport
+from app.models import User, UserConsent
 from app.repositories import user_repo
 from app.schemas.auth import DeleteAccountIn, UserOut
-from app.schemas.billing import ProfileIn
+
+class ProfileIn(BaseModel):
+    """改昵称请求体。"""
+
+    display_name: str = Field(min_length=1, max_length=40)
+
+    model_config = {"extra": "forbid"}
+
 
 router = APIRouter(prefix="/me", tags=["me"])
 
@@ -184,3 +192,52 @@ def delete_account(
     )
     session.commit()
     return Response(status_code=204)
+
+
+# ---------------------------------------------------------------- 反馈
+#
+# 反馈与投诉入口（合规必备）。
+# 
+# 反馈默认不进入训练集：`Feedback` 表只用于运营跟进，且不允许写入用户原文之外的内容。
+#
+# 路径是根级 `/feedback`（不在 `/me` 下）：未登录用户也能提交投诉，
+# 这是合规要求。因此单独一个 router，由 main.py 一并注册。
+
+
+feedback_router = APIRouter(tags=["feedback"])
+
+
+class FeedbackIn(BaseModel):
+    """反馈请求体。不进入训练集，只用于运营跟进。"""
+
+    rating: int | None = Field(default=None, ge=1, le=5)
+    category: str = Field(default="general", max_length=40)
+    content: str = Field(default="", max_length=2000)
+    report_id: int | None = None
+
+    model_config = {"extra": "forbid"}
+
+
+
+
+
+@feedback_router.post("/feedback", status_code=201)
+def create_feedback(
+    payload: FeedbackIn,
+    user: User | None = Depends(get_optional_user),
+    session: Session = Depends(get_session),
+) -> dict:
+    entry = Feedback(
+        user_id=user.id if user else None,
+        report_id=payload.report_id,
+        rating=payload.rating,
+        category=payload.category,
+        content=payload.content,
+    )
+    session.add(entry)
+    session.commit()
+    return {
+        "id": entry.id,
+        "received": True,
+        "note": "反馈已记录。内容仅用于改进服务，不用于模型训练；如需删除请联系支持。",
+    }

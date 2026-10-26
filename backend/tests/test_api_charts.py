@@ -225,7 +225,7 @@ def test_share_flow(client: TestClient) -> None:
 
 
 def test_share_token_is_not_stored_in_plaintext(client: TestClient, session) -> None:
-    from app.models.chart import ShareLink
+    from app.models import ShareLink
 
     headers = _signup(client)
     chart = _save(client, headers)

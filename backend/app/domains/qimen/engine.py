@@ -38,7 +38,7 @@ from app.domains.calendar_core.jiazi import (
     pillar_text,
     year_pillar_index,
 )
-from app.domains.calendar_core.julian import gregorian_to_jdn
+from app.domains.calendar_core.astronomy import gregorian_to_jdn
 from app.domains.calendar_core.solar_terms import SolarTermService, TermMoment, get_term_service
 from app.domains.qimen import constants as C
 from app.domains.qimen.schemas import QimenConvention, QimenInput

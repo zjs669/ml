@@ -26,8 +26,8 @@ from app.domains.llm.openai_compatible import get_provider
 from app.domains.llm.validator import FollowupValidation, validate_followup
 from app.domains.reporting import coerce
 from app.domains.skills import skillfile
-from app.models.chart import ChartRecord
-from app.models.report import AiReport, ReportFollowup
+from app.models import ChartRecord
+from app.models import AiReport, ReportFollowup
 from app.repositories import llm_repo, report_repo
 
 PROMPT_FILE = Path(__file__).resolve().parent / "prompts" / "followup_v1.txt"

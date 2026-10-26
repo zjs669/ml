@@ -6,17 +6,20 @@ import hashlib
 import secrets
 from datetime import timedelta
 
-from fastapi import APIRouter, Body, Depends, Query, Response
+from fastapi import APIRouter, Body, Depends, Query, Request, Response
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_optional_user
 from app.core.db import get_session, utcnow
 from app.core.errors import AppError, NotFound
+from app.core.throttle import client_key, hit
 from app.domains.bazi.engine import calculate as calculate_bazi
+from app.domains.bazi.reverse import resolve_timezone, reverse_search
+from app.domains.calendar_core.solar_terms import get_term_service
 from app.domains.registry import get_engine
-from app.models.chart import ChartRecord
-from app.models.user import User
+from app.models import ChartRecord
+from app.models import User
 from app.repositories import chart_repo
 from app.schemas.charts import (
     CalculateIn,
@@ -26,6 +29,8 @@ from app.schemas.charts import (
     ChartPatchIn,
     NoteIn,
     NoteOut,
+    ReverseSearchIn,
+    ReverseSearchOut,
     SaveChartIn,
     ShareIn,
     ShareOut,
@@ -466,3 +471,38 @@ def revoke_share(
     chart_repo.revoke_share(session, link)
     session.commit()
     return Response(status_code=204)
+
+
+# ---------------------------------------------------------------- 四柱反查
+#
+# 四柱反查接口：免登录、纯计算、按 IP 限流。
+#
+# 反查不落库，也不产生任何用户数据：输入干支、输出候选日期。
+# 需要 AI 解读时由前端把命中盘面送进既有的「保存命盘 → 生成报告」流程。
+
+
+# 反查挂在同一个 charts router 下（路径 /charts/bazi/reverse-search），
+# 不另建 router —— 否则 main.py 要注册两次，且 OpenAPI 里会分成两组。
+REVERSE_LIMIT_PER_MINUTE = 30
+
+
+@router.post("/charts/bazi/reverse-search", response_model=ReverseSearchOut)
+def reverse(
+    payload: ReverseSearchIn,
+    request: Request,
+    _: User | None = Depends(get_optional_user),
+) -> ReverseSearchOut:
+    """由年月日时四柱反推公历日期与时辰窗口。"""
+    hit(client_key(request, "reverse"), limit=REVERSE_LIMIT_PER_MINUTE, window_seconds=60)
+    result = reverse_search(
+        payload.pillars,
+        start=payload.range_start,
+        end=payload.range_end,
+        tz=resolve_timezone(payload.timezone),
+        conv=payload.convention,
+        service=get_term_service(),
+        longitude=payload.longitude,
+        limit=payload.limit,
+        offset=payload.offset,
+    )
+    return ReverseSearchOut.model_validate(result)

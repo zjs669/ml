@@ -21,7 +21,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.db import utcnow
 from app.core.security import hash_token
-from app.models.auth_tokens import PasswordResetToken
+from app.models import PasswordResetToken
 
 FORGOT = "/api/v1/auth/password/forgot"
 RESET = "/api/v1/auth/password/reset"

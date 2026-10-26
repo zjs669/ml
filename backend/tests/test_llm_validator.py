@@ -21,7 +21,7 @@ from app.domains.llm.mock import SAFETY_NOTE, MockProvider
 from app.domains.llm.validator import validate
 from app.domains.reporting import fallback
 from app.domains.reporting.service import build_user_prompt, system_prompt
-from app.domains.skills.resolver import resolve
+from app.domains.skills.loader import resolve
 from app.schemas.report import ReportPayload
 
 CHUNKS: list[dict[str, Any]] = [

@@ -19,9 +19,9 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.domains.llm.base import LLMRequest, LLMResponse, LLMUnavailable
 from app.domains.reporting import service as reporting_service
-from app.models.billing import UsageLedger
-from app.models.knowledge import KnowledgeChunk, KnowledgeSource
-from app.models.llm import LlmCall
+from app.models import UsageLedger
+from app.models import KnowledgeChunk, KnowledgeSource
+from app.models import LlmCall
 from app.repositories import llm_repo
 
 PASSWORD = "Passw0rd123"

@@ -6,11 +6,12 @@
 
 from __future__ import annotations
 
-from app.domains.calendar_core.jiazi import BRANCHES, STEMS
-from app.domains.calendar_core.tables import (
+from app.domains.calendar_core.jiazi import (
+    BRANCHES,
     CHANG_SHENG_ORDER,
     CHANG_SHENG_START_BY_BUREAU,
     NA_YIN_30,
+    STEMS,
 )
 
 # ---- 十二宫 ----

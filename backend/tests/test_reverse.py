@@ -22,7 +22,7 @@ from app.domains.bazi.reverse import (
 )
 from app.domains.bazi.schemas import BaziInput, Convention
 from app.domains.calendar_core.solar_terms import get_term_service
-from app.schemas.reverse import PillarQuery, ReverseSearchIn
+from app.schemas.charts import PillarQuery, ReverseSearchIn
 
 TZ = resolve_timezone("Asia/Shanghai")
 SERVICE = get_term_service()

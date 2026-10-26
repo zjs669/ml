@@ -14,9 +14,9 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.db import utcnow
-from app.models.chart import ChartRecord
-from app.models.llm import LlmCall
-from app.models.report import AiReport
+from app.models import ChartRecord
+from app.models import LlmCall
+from app.models import AiReport
 from app.repositories import llm_repo
 
 TASK = "bazi.overview.v1"

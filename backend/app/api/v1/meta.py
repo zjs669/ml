@@ -1,6 +1,10 @@
-"""元信息接口：口径选项、算法版本、合规文案版本。
+"""免登录的只读元信息：口径选项、算法版本、术数清单、模型状态、问卷题库。
 
-前端 ConventionPanel 与页面脚注都从这里取，避免把口径说明硬编码在 Vue 里。
+这些端点都不需要登录、都不写库，且都被前端在首屏或表单初始化时调用。
+放在一个模块里，`main.py` 只注册一次，新增一个只读端点不必再动注册表。
+
+题库（`/mbti/questions`）也在这里：它有 40 条带题干与选项，**不能**塞进
+`/meta/about`（会让「关于」页多传 10 KB），但也不需要独立模块 —— 它是只读元信息。
 """
 
 from __future__ import annotations
@@ -11,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.db import get_session
 from app.domains.bazi.constants import DayBoundaryNote
+from app.domains.mbti import items as MBTI
 from app.domains.registry import supported_domains
 from app.domains.relations.engine import load_rules
 from app.domains.skills.loader import load_all
@@ -128,3 +133,42 @@ def _llm_block(session: Session) -> dict:
 def llm_status(session: Session = Depends(get_session)) -> dict:
     """报告页展示用：是否真的在调大模型、用的哪个、今天还剩多少配额。"""
     return _llm_block(session)
+
+
+# ------------------------------------------------------------ 问卷题库
+#
+# 性格问卷题库：40 条带题干与选项。前端据此渲染问卷，不在 Vue 里硬编码题目。
+# 单独成路径而不是塞进 /meta/about：题库体积大，且只有问卷页需要。
+
+
+mbti_router = APIRouter(prefix="/mbti", tags=["mbti"])
+
+
+@mbti_router.get("/questions")
+def questions() -> dict:
+    """返回题库与维度定义。"""
+    return {
+        "bank_version": MBTI.BANK_VERSION,
+        "dimensions": [
+            {
+                "dimension": dim,
+                "name": MBTI.DIMENSION_LABELS[dim]["name"],
+                "poles": {
+                    pole_a: MBTI.DIMENSION_LABELS[dim][pole_a],
+                    pole_b: MBTI.DIMENSION_LABELS[dim][pole_b],
+                },
+            }
+            for dim, pole_a, pole_b in MBTI.DIMENSIONS
+        ],
+        "questions": [
+            {
+                "id": item.id,
+                "dimension": item.dimension,
+                "text": item.text,
+                "option_a": item.option_a,
+                "option_b": item.option_b,
+            }
+            for item in MBTI.QUESTIONS
+        ],
+        "school_note": MBTI.SCHOOL_NOTE,
+    }

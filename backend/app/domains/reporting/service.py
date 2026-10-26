@@ -24,11 +24,10 @@ from app.domains.llm.validator import FATAL, ValidationResult, validate
 from app.domains.reporting import coerce, fallback
 from app.domains.skills import skillfile
 from app.domains.skills.loader import SkillSpec
-from app.domains.skills.resolver import resolve
-from app.models.chart import ChartRecord
-from app.models.report import AiReport
-from app.repositories import knowledge_repo, llm_repo, report_repo
-from app.repositories.chart_repo import snapshot_hash
+from app.domains.skills.loader import resolve
+from app.models import ChartRecord
+from app.models import AiReport
+from app.repositories import chart_repo, knowledge_repo, llm_repo, report_repo
 
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 
@@ -383,7 +382,7 @@ def generate(
         model_name=model_name,
         skill_version=f"{spec.skill_key}@{spec.version}",
         prompt_version=settings.prompt_version,
-        chart_snapshot_hash=chart.snapshot_hash or snapshot_hash(chart_json),
+        chart_snapshot_hash=chart.snapshot_hash or chart_repo.snapshot_hash(chart_json),
         algorithm_version=chart.algorithm_version,
         depth=depth,
         report_json=payload,

@@ -11,6 +11,7 @@ import json
 import uuid
 
 from fastapi import APIRouter, Depends, Request
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
@@ -18,9 +19,14 @@ from app.core.config import settings
 from app.core.db import get_session
 from app.domains.billing import orders as order_service
 from app.domains.billing import webhooks
-from app.domains.billing.plans import PLAN_VERSION, list_plans
-from app.models.user import User
-from app.schemas.billing import OrderIn
+from app.domains.billing.orders import PLAN_VERSION, list_plans
+from app.models import User
+
+class OrderIn(BaseModel):
+    """下单请求体。只收 plan_code，金额一律由服务端按套餐表算。"""
+
+    plan_code: str = Field(min_length=1, max_length=40)
+
 
 router = APIRouter(prefix="/billing", tags=["billing"])
 
@@ -63,7 +69,7 @@ def get_config() -> dict:
             "code": "wechat",
             "label": "微信支付",
             "available": False,
-            "note": "未接入：需商户号、API v3 证书与回调验签，见 docs/查漏补缺与安全加固.md。",
+            "note": "未接入：需商户号、API v3 证书与回调验签，见 docs/archive/查漏补缺与安全加固.md。",
         },
         {
             "code": "alipay",

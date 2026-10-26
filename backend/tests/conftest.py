@@ -14,10 +14,10 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.core import login_guard
+from app.core import throttle
 from app.core.config import settings
 from app.core.db import get_session
-from app.core.ratelimit import reset as reset_ratelimit
+from app.core.throttle import reset as reset_ratelimit
 from app.main import app
 from app.models import Base
 
@@ -96,11 +96,11 @@ def client(session: Session) -> Iterator[TestClient]:
 
     app.dependency_overrides[get_session] = _override
     reset_ratelimit()
-    login_guard.reset_all()
+    throttle.reset_all()
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
-    login_guard.reset_all()
+    throttle.reset_all()
 
 
 @pytest.fixture

@@ -1,6 +1,6 @@
 """报告追问：接口、轮次上限、预算降级、越权与引用边界。
 
-追问的设计约束（见 docs/AI能力升级与蒸馏方案.md D1/D2）：
+追问的设计约束（见 docs/archive/AI能力升级与蒸馏方案.md D1/D2）：
 - 只能引用原报告 `citations_json` 里的 chunk_id；
 - 不扣额度，但受日预算与限流约束；
 - 模型输出不合格时返回确定性降级回答，且不污染原报告。
@@ -16,7 +16,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.domains.reporting import followup as followup_service
-from app.models.knowledge import KnowledgeChunk, KnowledgeSource
+from app.models import KnowledgeChunk, KnowledgeSource
 from app.repositories import llm_repo
 
 PASSWORD = "Passw0rd123"

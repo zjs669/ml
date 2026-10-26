@@ -9,7 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.models.knowledge import KnowledgeChunk, KnowledgeSource
+from app.models import KnowledgeChunk, KnowledgeSource
 
 PASSWORD = "Passw0rd123"
 APPROVED_TOPICS = ("六合", "三合", "相冲", "十神", "藏干", "大运")

@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.errors import AppError
 from app.domains.billing import orders as order_service
-from app.models.billing import Order, PaymentEvent
+from app.models import Order, PaymentEvent
 
 PROVIDER = "mock"
 

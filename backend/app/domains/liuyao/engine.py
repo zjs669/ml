@@ -23,7 +23,7 @@ from app.domains.calendar_core.jiazi import (
     pillar_of_index,
     pillar_text,
 )
-from app.domains.calendar_core.julian import gregorian_to_jdn
+from app.domains.calendar_core.astronomy import gregorian_to_jdn
 from app.domains.calendar_core.lunar import solar_to_lunar
 from app.domains.calendar_core.solar_terms import SolarTermService, get_term_service
 from app.domains.liuyao import constants as C

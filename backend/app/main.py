@@ -18,20 +18,16 @@ from app.api.v1 import (
     auth,
     billing,
     charts,
-    feedback,
     knowledge,
-    mbti,
     me,
     meta,
     reports,
-    reverse,
     vision,
 )
 from app.core.config import settings
 from app.core.db import engine
 from app.core.errors import install_error_handlers
-from app.core.logging import configure_logging
-from app.core.middleware import RequestContextMiddleware
+from app.core.observability import RequestContextMiddleware, configure_logging
 
 logger = logging.getLogger("app.startup")
 
@@ -76,9 +72,13 @@ app.add_middleware(
 
 install_error_handlers(app)
 
-for module in (auth, charts, reports, knowledge, billing, me, feedback, meta, reverse, vision, mbti):
+for module in (auth, charts, reports, knowledge, billing, me, meta, vision):
     app.include_router(module.router, prefix=settings.api_prefix)
 app.include_router(charts.share_router, prefix=settings.api_prefix)
+# 根级路径的辅助 router：分享预览、反馈、问卷题库。它们不在任何前缀下，
+# 因此单独注册，而不是硬塞进某个带 prefix 的模块。
+app.include_router(me.feedback_router, prefix=settings.api_prefix)
+app.include_router(meta.mbti_router, prefix=settings.api_prefix)
 
 
 @app.get("/healthz", tags=["meta"])

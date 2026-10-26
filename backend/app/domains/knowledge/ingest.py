@@ -16,7 +16,7 @@
 
 规则：
 - `content_hash` 唯一，重复入库不会产生重复片段；
-- 新片段一律 `pending`，必须经 `scripts/admin/approve_chunk.py` 审核后才可被检索；
+- 新片段一律 `pending`，必须经 `python -m scripts.admin approve` 审核后才可被检索；
 - `license_status` 缺失直接拒绝整个文件——来源不明的文本不允许进库。
 """
 
@@ -33,7 +33,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
-from app.models.knowledge import KnowledgeChunk, KnowledgeSource
+from app.models import KnowledgeChunk, KnowledgeSource
 
 FRONT_MATTER = re.compile(r"^---\s*\n(.*?)\n---\s*\n(.*)$", re.S)
 SECTION = re.compile(r"^##\s+(.+?)\s*$", re.M)

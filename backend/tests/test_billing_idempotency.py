@@ -15,8 +15,8 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.security import hash_password
 from app.domains.billing import ledger
-from app.models.billing import Order, PaymentEvent, UsageLedger
-from app.models.user import User
+from app.models import Order, PaymentEvent, UsageLedger
+from app.models import User
 
 PASSWORD = "Passw0rd123"
 

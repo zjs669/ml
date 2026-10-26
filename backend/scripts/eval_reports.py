@@ -26,7 +26,7 @@ from app.core.security import hash_password
 from app.domains.bazi.engine import calculate as calculate_bazi
 from app.domains.billing import ledger
 from app.domains.reporting import service as reporting_service
-from app.models.user import User
+from app.models import User
 from app.repositories import chart_repo
 from app.schemas.charts import CalculateIn
 

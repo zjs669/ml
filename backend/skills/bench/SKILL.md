@@ -8,7 +8,7 @@ always: true
 max_chars: 900
 priority: 100
 source: 人工整理（第 3 轮精简：去掉未经核验的类目经验）
-updated: 2026-10-25
+updated: 2026-10-26
 ---
 
 这是内部题库评测：**必须从 A/B/C/D 选一项**，不允许拒答、不允许写「无法判断」。

@@ -9,22 +9,23 @@ from __future__ import annotations
 
 import pytest
 
-from app.repositories.knowledge_repo import DOMAIN_KNOWLEDGE_PARENT, knowledge_domain
+from app.repositories import knowledge_repo
+from app.repositories.knowledge_repo import DOMAIN_KNOWLEDGE_PARENT
 
 
 def test_derived_domains_map_to_parent() -> None:
-    assert knowledge_domain("ziwei_horoscope") == "ziwei"
-    assert knowledge_domain("ziwei_flying") == "ziwei"
-    assert knowledge_domain("hepan") == "bazi"
+    assert knowledge_repo.knowledge_domain("ziwei_horoscope") == "ziwei"
+    assert knowledge_repo.knowledge_domain("ziwei_flying") == "ziwei"
+    assert knowledge_repo.knowledge_domain("hepan") == "bazi"
 
 
 def test_primary_domains_unchanged() -> None:
     for domain in ("bazi", "ziwei", "liuyao", "qimen", "almanac", "tarot", "dream", "mbti"):
-        assert knowledge_domain(domain) == domain
+        assert knowledge_repo.knowledge_domain(domain) == domain
 
 
 def test_none_passes_through() -> None:
-    assert knowledge_domain(None) is None
+    assert knowledge_repo.knowledge_domain(None) is None
 
 
 def test_mapping_targets_are_primary_domains() -> None:
@@ -38,5 +39,5 @@ def test_every_registered_domain_resolves() -> None:
     from app.domains.registry import supported_domains
 
     for domain in supported_domains():
-        resolved = knowledge_domain(domain)
+        resolved = knowledge_repo.knowledge_domain(domain)
         assert resolved and isinstance(resolved, str)

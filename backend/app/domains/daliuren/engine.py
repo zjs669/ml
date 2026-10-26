@@ -493,7 +493,7 @@ def calculate(inp: DaliurenInput, conv: DaliurenConvention | None = None) -> Cha
 
 
 def _jdn(local_dt: Any) -> int:
-    from app.domains.calendar_core.julian import gregorian_to_jdn
+    from app.domains.calendar_core.astronomy import gregorian_to_jdn
 
     return gregorian_to_jdn(local_dt.year, local_dt.month, local_dt.day)
 
