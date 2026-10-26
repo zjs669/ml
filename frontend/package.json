@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "typecheck": "vue-tsc --noEmit",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check:boards": "npx --yes vite-node@6 scripts/check-boards.mjs"
   },
   "dependencies": {
     "axios": "^1.7.9",

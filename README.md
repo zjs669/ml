@@ -150,6 +150,13 @@ npm run dev        # http://localhost:5173，/api 代理到 127.0.0.1:8000
 
 生产构建：`npm run build`（内含 `vue-tsc --noEmit`，要求零错误）。
 
+盘面渲染冒烟（三个专属盘面用真实 `chart_facts` 做 SSR 渲染，验「拿到真实数据不崩、关键字段确实出现」）：
+
+```bash
+cd backend && PYTHONPATH=. python -m scripts.dump_board_facts   # 导出样本到 backend/var/
+cd frontend && npm run check:boards                              # 渲染并校验
+```
+
 ### 3.5 一条命令验证前后端契约
 
 ```bash
