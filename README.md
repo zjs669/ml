@@ -82,7 +82,8 @@ backend/
   data/bench/           本地题库与错例集（体积大、许可证各异，已 gitignore）
   skills/               每次 AI 调用前必读的 SKILL.md（全局 + 16 域）
 frontend/
-  src/api/              axios 封装、契约类型、domains/mbti/vision 三个新客户端
+  src/api/              axios 封装、domains/mbti/vision 三个新客户端
+  src/api/types/        契约类型按域拆分（common/bazi/reverse/ziwei/liuyao/qimen/charts/reports/knowledge/billing/auth）
   src/config/           domainForms.ts：8 个同构域的声明式表单配置
   src/stores/           auth / chart / usage
   src/components/       chart（含 GenericBoard 兜底）/ report / common
