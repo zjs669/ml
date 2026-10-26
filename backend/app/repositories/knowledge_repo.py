@@ -15,6 +15,23 @@ from app.models.knowledge import KnowledgeChunk, KnowledgeSource
 
 SNIPPET_LIMIT = 260
 
+#: 派生域 → 知识库父域。知识源按「典籍所属领域」归档，
+#: 紫微运限/飞星的知识来自紫微典籍，合盘来自四柱典籍 ——
+#: 若严格按 domain 精确匹配，这些派生域永远检索不到任何片段，
+#: 报告里的 traditional_interpretations 会永远是空数组。
+DOMAIN_KNOWLEDGE_PARENT: dict[str, str] = {
+    "ziwei_horoscope": "ziwei",
+    "ziwei_flying": "ziwei",
+    "hepan": "bazi",
+}
+
+
+def knowledge_domain(domain: str | None) -> str | None:
+    """把派生域映射到知识库里的父域；未知域原样返回。"""
+    if domain is None:
+        return None
+    return DOMAIN_KNOWLEDGE_PARENT.get(domain, domain)
+
 _SEARCH_SQL = text(
     """
     SELECT c.id            AS chunk_id,
@@ -81,15 +98,16 @@ def search(session: Session, *, query: str, domain: str | None = None, limit: in
     cleaned = (query or "").strip()
     if not cleaned:
         return []
+    scoped = knowledge_domain(domain)
     rows = session.execute(
-        _SEARCH_SQL, {"q": cleaned, "domain": domain, "limit": limit}
+        _SEARCH_SQL, {"q": cleaned, "domain": scoped, "limit": limit}
     ).all()
     if rows:
         return [_row_to_dict(row) for row in rows]
     # ngram 未命中时退化为关键词兜底，保证短查询也能出结果
     like = f"%{cleaned[:40]}%"
     rows = session.execute(
-        _FALLBACK_SQL, {"like": like, "domain": domain, "limit": limit}
+        _FALLBACK_SQL, {"like": like, "domain": scoped, "limit": limit}
     ).all()
     return [_row_to_dict(row) for row in rows]
 
