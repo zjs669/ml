@@ -78,18 +78,19 @@ backend/
     services/           media.py（MIME 校验 / 剥 EXIF / 内容寻址 / 留存期清理）、export.py
     models/ schemas/ repositories/
   alembic/              5 条迁移（init → llm_calls → auth_tokens → report_followups → chart_media）
-  tests/                1650+ 项：16 域引擎、跨域报告链路、反查往返、追问、技能注入、架构守卫、JWT 攻击面、并发与幂等
-  scripts/              crosscheck、smoke_api、smoke_e2e（15 域）、prepare_bench、bench_eval、bench_stats、distill_skills、distill_round、encrypt_secrets、admin/*
+  tests/                1700+ 项：16 域引擎、跨域报告链路、反查往返、追问、技能注入、架构守卫、盘面/路由一致性、JWT 攻击面、并发与幂等
+  scripts/              crosscheck、smoke_api、smoke_e2e（15 域）、prepare_bench、bench_eval、bench_stats、distill_skills、distill_round、encrypt_secrets、admin（子命令：approve/publish-skill/mark-paid/cleanup）
   data/bench/           本地题库与错例集（体积大、许可证各异，已 gitignore）
   skills/               每次 AI 调用前必读的 SKILL.md（全局 + 16 域）
 frontend/
-  src/api/              axios 封装、domains/mbti/vision 三个新客户端
-  src/api/types/        契约类型按域拆分（common/bazi/reverse/ziwei/liuyao/qimen/charts/reports/knowledge/billing/auth）
-  src/config/           domainForms.ts：8 个同构域的声明式表单配置
+  src/api/              axios 封装 + 按域客户端（about/meta/mbti/vision/…）
+  src/api/types/        契约类型按域拆分（14 个文件 + index.ts 重导出）
+  src/config/           domains.ts（19 个入口的唯一清单）+ domainForms.ts（10 个同构域的表单配置）
   src/stores/           auth / chart / usage
-  src/components/       chart（含 GenericBoard 兜底）/ report / common
-  src/pages/            28 个页面（含 10 个薄页面 + 问卷页 + 合盘页 + 两个视觉页）
-  src/router/ src/styles/
+  src/components/       chart（9 个专属盘面 + ChartFrame + GenericBoard 兜底）/ report / common（PageShell/SurfaceCard）
+  src/pages/            23 个页面（10 个同构域共用 DomainChartPage，靠 props 传 domain）
+  src/router/           routes.ts（纯数据，供冒烟脚本 import）+ index.ts（router 实例与守卫）
+  src/styles/
 infra/                  docker-compose.yml、nginx.conf、两个 Dockerfile、backup.sh
 docs/                   docs/README.md 为索引：重构方案/口径/架构/数据库/面相/基准/评测/题库/技能/安全
 ```
@@ -150,12 +151,18 @@ npm run dev        # http://localhost:5173，/api 代理到 127.0.0.1:8000
 
 生产构建：`npm run build`（内含 `vue-tsc --noEmit`，要求零错误）。
 
-盘面渲染冒烟（三个专属盘面用真实 `chart_facts` 做 SSR 渲染，验「拿到真实数据不崩、关键字段确实出现」）：
+渲染冒烟（SSR 真渲染，验「拿到真实数据不崩、关键字段确实出现」）：
 
 ```bash
 cd backend && PYTHONPATH=. python -m scripts.dump_board_facts   # 导出样本到 backend/var/
-cd frontend && npm run check:boards                              # 渲染并校验
+cd frontend && npm run check:routes    # 12 个路由：验每页不是空白、同构域配置链没断
+cd frontend && npm run check:boards    # 5 个专属盘面：almanac/tarot/daliuren/astrology/meihua
+cd frontend && npm run check           # 上面三项 + typecheck 一起跑
 ```
+
+> 冒烟脚本必须用 `vite.smoke.config.ts`（`npm run` 里已带）：默认配置会把 vue 预打包到
+> `node_modules/.vite/deps`，与源码 import 的 vue 形成双实例，`renderSlot` 会抛
+> `Cannot read properties of null (reading 'ce')`。该配置关掉 `optimizeDeps` 即可。
 
 ### 3.5 一条命令验证前后端契约
 
@@ -165,7 +172,7 @@ python -m scripts.smoke_e2e            # 经 vite 代理跑完整链路
 SMOKE_BASE=http://127.0.0.1:8000/api/v1 python -m scripts.smoke_e2e   # 直连后端
 ```
 
-脚本依次走：健康检查 → 套餐 → 注册 → **四术数各排一次盘** → 四术数各存一次盘（服务端重算，客户端盘面一律不采信）→ 无额度时详版被 402 拦截 → 下单 + Mock 回调 → 四术数各生成简版报告并逐次核对账本（完成态扣 1、降级原额退回、有付费额度时不消耗免费次数）→ 幂等重放 → 详版成功 → 分享 → 导出 → 笔记 → 知识检索。任一术数的入参字段名或响应结构改坏，这里会先红。
+脚本依次走：健康检查 → 套餐 → 注册 → **15 个域各排一次盘** → 15 个域各存一次盘（服务端重算，客户端盘面一律不采信）→ 无额度时详版被 402 拦截 → 下单 + Mock 回调 → 15 个域各生成简版报告并逐次核对账本（完成态扣 1、降级原额退回、有付费额度时不消耗免费次数）→ 幂等重放 → 详版成功 → 分享 → 导出 → 笔记 → 知识检索。任一术数的入参字段名或响应结构改坏，这里会先红。
 
 ## 4. 测试
 
@@ -257,7 +264,7 @@ python -m scripts.encrypt_secrets           # 加密并把明文改成 enc:v1:..
 
 ## 7. 账号安全与找回密码
 
-- **密码存储**：Argon2id（`time_cost=3, memory_cost=64MiB, parallelism=2`），每次带随机盐；登录时若参数已升级会自动 rehash。库里不存在明文，也不存在 MD5——`md5/sha` 属快速哈希，碰撞/字典攻击成本远低于 Argon2id（详见 `docs/查漏补缺与安全加固.md` 第 D1 节）。
+- **密码存储**：Argon2id（`time_cost=3, memory_cost=64MiB, parallelism=2`），每次带随机盐；登录时若参数已升级会自动 rehash。库里不存在明文，也不存在 MD5——`md5/sha` 属快速哈希，碰撞/字典攻击成本远低于 Argon2id（详见 `docs/archive/查漏补缺与安全加固.md` 第 D1 节）。
 - **JWT**：HS256 白名单，强制校验 `iss=xuanshu` / `aud=xuanshu-api`；access 15 分钟；refresh 7 天且**服务端轮换**——每枚 refresh 落一行 `refresh_tokens`，用过即废，重放同一 `jti` 视为被盗并作废整条登录链。
 - **登出与改密**：`users.token_version` 前进一位 + 账本全作废，所有设备立即下线；`DELETE /auth/sessions` 等价于「登出所有设备」。
 - **暴力破解**：IP 限流之外还按**账号**计数，连续 5 次失败锁定 15 分钟，之后按轮次翻倍（上限 24 小时）。

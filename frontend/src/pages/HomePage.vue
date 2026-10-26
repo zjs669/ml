@@ -3,25 +3,26 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { knowledgeStats, type KnowledgeStats } from '@/api/knowledge'
+import { getAbout, type AboutInfo } from '@/api/about'
+import { DOMAIN_ENTRIES, entriesByGroup } from '@/config/domains'
 
 const router = useRouter()
 const stats = ref<KnowledgeStats | null>(null)
+const about = ref<AboutInfo | null>(null)
 
 onMounted(async () => {
-  try {
-    stats.value = await knowledgeStats()
-  } catch {
-    stats.value = null
-  }
+  const [knowledge, info] = await Promise.all([
+    knowledgeStats().catch(() => null),
+    getAbout().catch(() => null),
+  ])
+  stats.value = knowledge
+  about.value = info
 })
 
-const ENTRIES = [
-  { to: '/bazi', mark: '柱', name: '四柱八字', desc: '四柱 · 藏干 · 十神 · 大运' },
-  { to: '/reverse', mark: '逆', name: '四柱反查', desc: '干支 → 公历日期与时窗' },
-  { to: '/ziwei', mark: '紫', name: '紫微斗数', desc: '十二宫 · 十四主星 · 四化' },
-  { to: '/liuyao', mark: '爻', name: '六爻', desc: '本卦变卦 · 纳甲 · 六亲' },
-  { to: '/qimen', mark: '门', name: '奇门遁甲', desc: '九宫 · 星门神 · 旬空马星' },
-]
+/** 入口清单与顶部导航、工具页共用一份配置，这里不再硬编码。 */
+const buckets = entriesByGroup()
+
+const domainCount = DOMAIN_ENTRIES.length
 
 const FEATURES = [
   {
@@ -41,6 +42,10 @@ const FEATURES = [
     body: '立春边界、换日规则、真太阳时全部可选，选择随命盘存档，报告与导出文本都标注所用口径。',
   },
 ]
+
+function go(path: string): void {
+  router.push(path)
+}
 </script>
 
 <template>
@@ -48,13 +53,15 @@ const FEATURES = [
     <section class="hero">
       <div class="hero-main">
         <h1>玄枢国学研习台</h1>
-        <p class="tagline">把传统术数拆成<span class="hl">可核验的事实</span>与<span class="hl">可追溯的解释</span>——排盘由算法算，解释由 AI 写，对错由你查。</p>
+        <p class="tagline">
+          把传统术数拆成<span class="hl">可核验的事实</span>与<span class="hl">可追溯的解释</span>——排盘由算法算，解释由 AI 写，对错由你查。
+        </p>
         <div class="actions">
-          <el-button type="primary" size="large" @click="router.push('/bazi')">免费排盘（免登录）</el-button>
-          <el-button size="large" @click="router.push('/knowledge')">先看知识库</el-button>
+          <el-button type="primary" size="large" @click="go('/bazi')">免费排盘（免登录）</el-button>
+          <el-button size="large" @click="go('/tools')">看全部 {{ domainCount }} 个术数</el-button>
         </div>
         <p class="hero-foot">
-          当前为内测版本：四柱八字、四柱反查、紫微斗数、六爻、奇门遁甲均已开放，支付为演示用 Mock 通道，不产生真实扣款。
+          当前为内测版本：{{ domainCount }} 个入口全部开放，支付为演示用 Mock 通道，不产生真实扣款。
         </p>
       </div>
       <div class="hero-side">
@@ -64,11 +71,11 @@ const FEATURES = [
         </div>
         <div class="stat">
           <span class="stat-label">已登记关系规则</span>
-          <span class="stat-num">48</span>
+          <span class="stat-num">{{ about?.relations_rule_count ?? '—' }}</span>
         </div>
         <div class="stat">
-          <span class="stat-label">可切换口径维度</span>
-          <span class="stat-num">4</span>
+          <span class="stat-label">已上线术数</span>
+          <span class="stat-num">{{ domainCount }}</span>
         </div>
         <p class="stat-note">数字均为实时统计，口径见知识库与口径说明</p>
       </div>
@@ -77,16 +84,25 @@ const FEATURES = [
     <section class="entries-block">
       <div class="section-head">
         <h2>选一个术数开始</h2>
-        <p>四术数都已开放，排盘免登录；保存命盘与生成解读才需要账号。</p>
+        <p>全部 {{ domainCount }} 个入口都已开放，排盘免登录；保存命盘与生成解读才需要账号。</p>
       </div>
-      <div class="entries">
-        <button v-for="entry in ENTRIES" :key="entry.to" class="entry" @click="router.push(entry.to)">
-          <span class="entry-mark">{{ entry.mark }}</span>
-          <span class="entry-body">
-            <span class="entry-name">{{ entry.name }}</span>
-            <span class="entry-desc">{{ entry.desc }}</span>
-          </span>
-        </button>
+
+      <div v-for="bucket in buckets" :key="bucket.group" class="entry-group">
+        <div class="entry-group-title">{{ bucket.group }}</div>
+        <div class="entries">
+          <button
+            v-for="entry in bucket.items"
+            :key="entry.key"
+            class="entry"
+            @click="go(entry.path)"
+          >
+            <span class="entry-mark">{{ entry.mark }}</span>
+            <span class="entry-body">
+              <span class="entry-name">{{ entry.label }}</span>
+              <span class="entry-desc">{{ entry.desc }}</span>
+            </span>
+          </button>
+        </div>
       </div>
     </section>
 
@@ -101,7 +117,9 @@ const FEATURES = [
     <section class="disclaimer">
       <div class="disclaimer-title">重要说明</div>
       <ul>
-        <li>本站内容属于传统文化研习与知识普及，<strong>不构成医疗、法律、投资、婚恋等任何专业建议</strong>，也不用于疾病诊断、彩票赌博、命运预测。</li>
+        <li>
+          本站内容属于传统文化研习与知识普及，<strong>不构成医疗、法律、投资、婚恋等任何专业建议</strong>，也不用于疾病诊断、彩票赌博、命运预测。
+        </li>
         <li>AI 生成内容已在页面与导出文本中显式标识；模型输出仅供研习参考，请勿据此做出重大决定。</li>
         <li>排盘结果依赖你填写的出生时间与地点，输入有误会导致结果不同；时辰不详时系统会明确标注。</li>
         <li>你可以随时删除自己的命盘、笔记与账号；删除后关联报告同步失效。</li>
@@ -290,9 +308,27 @@ const FEATURES = [
   color: var(--xs-text-muted);
 }
 
+.entry-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.entry-group + .entry-group {
+  margin-top: 16px;
+}
+
+.entry-group-title {
+  font-size: 12px;
+  letter-spacing: 0.8px;
+  color: var(--xs-text-muted);
+  padding-bottom: 6px;
+  border-bottom: 1px dashed var(--xs-border);
+}
+
 .entries {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 12px;
 }
 

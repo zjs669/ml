@@ -2,12 +2,14 @@
 import { computed, type Component } from 'vue'
 
 import AlmanacBoard from './AlmanacBoard.vue'
+import AstrologyBoard from './AstrologyBoard.vue'
 import BaziBoard from './BaziBoard.vue'
 import DaliurenBoard from './DaliurenBoard.vue'
 import GenericBoard from './GenericBoard.vue'
 import TarotBoard from './TarotBoard.vue'
 import ZiweiBoard from './ZiweiBoard.vue'
 import LiuyaoBoard from './LiuyaoBoard.vue'
+import MeihuaBoard from './MeihuaBoard.vue'
 import QimenBoard from './QimenBoard.vue'
 import type { ChartResult } from '@/api/types'
 
@@ -33,6 +35,8 @@ const BOARDS: Record<string, Component> = {
   almanac: AlmanacBoard,
   tarot: TarotBoard,
   daliuren: DaliurenBoard,
+  astrology: AstrologyBoard,
+  meihua: MeihuaBoard,
 }
 
 const board = computed<Component>(() => BOARDS[props.result.domain] ?? GenericBoard)

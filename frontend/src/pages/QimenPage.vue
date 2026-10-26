@@ -3,7 +3,7 @@ import { reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 
-import ChartBoard from '@/components/chart/ChartBoard.vue'
+import ChartFrame from '@/components/chart/ChartFrame.vue'
 import * as chartsApi from '@/api/charts'
 import { useAuthStore } from '@/stores/auth'
 import type { ChartResult } from '@/api/types'
@@ -146,18 +146,18 @@ function onReset(): void {
       </el-form-item>
     </el-form>
 
-    <div v-if="result" class="result">
-      <div class="result-head">
-        <h3>局盘</h3>
-        <div class="save-row">
-          <el-input v-model="saveTitle" placeholder="给这局起个名字（可选）" style="width: 220px" />
-          <el-button plain :loading="saving" @click="onSave(false)">保存盘面</el-button>
-          <el-button type="primary" :loading="saving" @click="onSave(true)">保存并生成解读</el-button>
-        </div>
-      </div>
-
-      <ChartBoard :result="result" />
-
+        <ChartFrame
+      v-if="result"
+      v-model:save-title="saveTitle"
+      title="局盘"
+      title-placeholder="给这局起个名字（可选）"
+      :result="result"
+      :saving="saving"
+      save-text="保存盘面"
+      interpret-text="保存并生成解读"
+      @save="onSave(false)"
+      @interpret="onSave(true)"
+    >
       <el-alert
         class="next-step"
         type="info"
@@ -166,7 +166,7 @@ function onReset(): void {
         title="关于解读"
         description="解读只复述局数、九宫星门神、旬空与马星等盘面事实，不取用神、不作吉凶推断、不择日、不给应期。"
       />
-    </div>
+        </ChartFrame>
   </div>
 </template>
 
@@ -200,30 +200,6 @@ function onReset(): void {
   font-size: 12px;
   color: var(--xs-text-muted);
   line-height: 1.6;
-}
-
-.result {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.result-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.result-head h3 {
-  margin: 0;
-}
-
-.save-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
 }
 
 .next-step {

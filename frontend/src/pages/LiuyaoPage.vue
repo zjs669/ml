@@ -3,7 +3,7 @@ import { computed, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 
-import ChartBoard from '@/components/chart/ChartBoard.vue'
+import ChartFrame from '@/components/chart/ChartFrame.vue'
 import * as chartsApi from '@/api/charts'
 import { useAuthStore } from '@/stores/auth'
 import type { ChartResult, LiuyaoFormInput } from '@/api/types'
@@ -221,18 +221,18 @@ function onReset(): void {
       </el-form-item>
     </el-form>
 
-    <div v-if="result" class="result">
-      <div class="result-head">
-        <h3>卦盘</h3>
-        <div class="save-row">
-          <el-input v-model="saveTitle" placeholder="给这张卦盘起个名字（可选）" style="width: 220px" />
-          <el-button plain :loading="saving" @click="onSave(false)">保存卦盘</el-button>
-          <el-button type="primary" :loading="saving" @click="onSave(true)">保存并生成解读</el-button>
-        </div>
-      </div>
-
-      <ChartBoard :result="result" />
-
+        <ChartFrame
+      v-if="result"
+      v-model:save-title="saveTitle"
+      title="卦盘"
+      title-placeholder="给这张卦盘起个名字（可选）"
+      :result="result"
+      :saving="saving"
+      save-text="保存卦盘"
+      interpret-text="保存并生成解读"
+      @save="onSave(false)"
+      @interpret="onSave(true)"
+    >
       <el-alert
         class="next-step"
         type="info"
@@ -241,7 +241,7 @@ function onReset(): void {
         title="关于解读"
         description="解读只复述卦名、卦宫、世应、纳甲六亲六神与动变关系，不含吉凶断语、用神取舍与应期推算。"
       />
-    </div>
+        </ChartFrame>
   </div>
 </template>
 
@@ -293,30 +293,6 @@ function onReset(): void {
   width: 40px;
   font-size: 12px;
   color: var(--xs-text-muted);
-}
-
-.result {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.result-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.result-head h3 {
-  margin: 0;
-}
-
-.save-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
 }
 
 .next-step {

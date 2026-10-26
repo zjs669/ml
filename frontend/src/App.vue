@@ -3,6 +3,7 @@ import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import * as metaApi from '@/api/meta'
+import { DOMAIN_ENTRIES, entriesByGroup } from '@/config/domains'
 import { useAuthStore } from '@/stores/auth'
 import { useUsageStore } from '@/stores/usage'
 
@@ -11,17 +12,23 @@ const router = useRouter()
 const auth = useAuthStore()
 const usage = useUsageStore()
 
+/**
+ * 一级导航只放「跨域」入口。
+ * 术数入口统一收进「排盘」下拉 —— 16 个域 + 反查 + 面相 + 手相共 19 项，
+ * 平铺会换行，也会让「黄历」和「四柱」看起来同等重要。
+ */
 const NAV = [
   { to: '/', label: '首页' },
   { to: '/tools', label: '工具' },
-  { to: '/bazi', label: '排盘' },
-  { to: '/ziwei', label: '紫微' },
-  { to: '/liuyao', label: '六爻' },
-  { to: '/qimen', label: '奇门' },
-  { to: '/reverse', label: '四柱反查' },
   { to: '/knowledge', label: '知识库' },
   { to: '/pricing', label: '套餐' },
 ]
+
+/** 下拉里的分组，与 config/domains.ts 同一份数据。 */
+const domainGroups = entriesByGroup()
+
+/** 当前路径是否落在某个术数入口下（用于给「排盘」加高亮）。 */
+const inDomain = computed(() => DOMAIN_ENTRIES.some((item) => item.path === route.path))
 
 const activePath = computed(() => route.path)
 
@@ -38,6 +45,10 @@ async function onLogout(): Promise<void> {
   await auth.logout()
   usage.clear()
   router.push('/')
+}
+
+function go(path: string): void {
+  router.push(path)
 }
 
 onMounted(async () => {
@@ -58,7 +69,42 @@ onMounted(async () => {
 
         <nav class="nav">
           <router-link
-            v-for="item in NAV"
+            v-for="item in NAV.slice(0, 2)"
+            :key="item.to"
+            :to="item.to"
+            class="nav-link"
+            :class="{ active: activePath === item.to }"
+          >
+            {{ item.label }}
+          </router-link>
+
+          <el-dropdown trigger="hover" placement="bottom-start" popper-class="nav-dropdown">
+            <span class="nav-link dropdown-trigger" :class="{ active: inDomain }">
+              排盘
+              <span class="caret">▾</span>
+            </span>
+            <template #dropdown>
+              <div class="dropdown-body">
+                <div v-for="bucket in domainGroups" :key="bucket.group" class="dropdown-group">
+                  <div class="dropdown-group-title">{{ bucket.group }}</div>
+                  <button
+                    v-for="entry in bucket.items"
+                    :key="entry.key"
+                    class="dropdown-item"
+                    :class="{ current: activePath === entry.path }"
+                    @click="go(entry.path)"
+                  >
+                    <span class="dropdown-mark">{{ entry.mark }}</span>
+                    <span class="dropdown-label">{{ entry.label }}</span>
+                    <span v-if="entry.requiresAuth" class="dropdown-lock">需登录</span>
+                  </button>
+                </div>
+              </div>
+            </template>
+          </el-dropdown>
+
+          <router-link
+            v-for="item in NAV.slice(2)"
             :key="item.to"
             :to="item.to"
             class="nav-link"
@@ -94,8 +140,17 @@ onMounted(async () => {
         <div class="footer-col">
           <div class="footer-title">关于</div>
           <p>
-            玄枢国学研习台：确定性排盘 + 规则引擎 + 可校验的 AI 解释。目前开放四柱八字、四柱反查、紫微斗数（三合派）、六爻（京房纳甲）与奇门遁甲（时家转盘拆补法），内测阶段收取的是 Mock 支付，不产生真实扣款。
+            玄枢国学研习台：确定性排盘 + 规则引擎 + 可校验的 AI 解释。已开放 16 个术数：
+            四柱八字与反查、紫微斗数（三合派，含运限与飞星）、六爻（京房纳甲）、奇门遁甲（时家转盘拆补）、
+            大六壬、梅花易数、小六壬、太乙九星、黄历、塔罗、西洋占星、关系合盘、性格问卷、解梦，
+            以及面相与手相两个视觉域。内测阶段收取的是 Mock 支付，不产生真实扣款。
           </p>
+        </div>
+        <div class="footer-col">
+          <div class="footer-title">术数入口</div>
+          <router-link v-for="entry in DOMAIN_ENTRIES" :key="entry.key" :to="entry.path">
+            {{ entry.label }}
+          </router-link>
         </div>
         <div class="footer-col">
           <div class="footer-title">合规</div>
@@ -251,8 +306,14 @@ onMounted(async () => {
   margin: 0 auto;
   padding: 22px 20px 10px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: 1.5fr 0.9fr 0.9fr 1.2fr;
   gap: 18px;
+}
+
+/* 术数入口有 19 条，单列会拉得比其它列长一倍 */
+.footer-col:nth-child(2) a {
+  display: inline-block;
+  width: 50%;
 }
 
 .footer-title {
@@ -285,6 +346,92 @@ onMounted(async () => {
   font-size: 11px;
   color: var(--xs-text-muted);
   padding: 10px 0 16px;
+}
+
+
+.dropdown-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.caret {
+  font-size: 9px;
+  opacity: 0.65;
+  transform: translateY(-1px);
+}
+
+.dropdown-body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(160px, 1fr));
+  gap: 4px 10px;
+  padding: 8px 6px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.dropdown-group-title {
+  font-size: 11px;
+  color: var(--xs-text-muted);
+  letter-spacing: 0.6px;
+  padding: 8px 10px 4px;
+  border-bottom: 1px dashed var(--xs-border);
+  margin-bottom: 2px;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 7px 10px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--xs-text);
+  text-align: left;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.dropdown-item:hover {
+  background: rgba(138, 106, 59, 0.09);
+  color: var(--xs-accent);
+}
+
+.dropdown-item.current {
+  background: linear-gradient(135deg, rgba(138, 106, 59, 0.16), rgba(194, 154, 94, 0.12));
+  font-weight: 600;
+  color: #6f5327;
+}
+
+.dropdown-mark {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 7px;
+  background: #f6f1e6;
+  color: var(--xs-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Songti SC', 'STSong', serif;
+  font-size: 12px;
+}
+
+.dropdown-label {
+  flex: 1;
+}
+
+.dropdown-lock {
+  font-size: 10px;
+  color: var(--xs-text-muted);
+  background: var(--xs-surface-muted);
+  border-radius: 999px;
+  padding: 1px 6px;
 }
 
 @media (max-width: 720px) {

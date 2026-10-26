@@ -3,7 +3,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 
-import ChartBoard from '@/components/chart/ChartBoard.vue'
+import ChartFrame from '@/components/chart/ChartFrame.vue'
 import ConventionPanel from '@/components/common/ConventionPanel.vue'
 import { useChartStore } from '@/stores/chart'
 import { useAuthStore } from '@/stores/auth'
@@ -192,17 +192,16 @@ const result = computed(() => store.result)
       </el-form-item>
     </el-form>
 
-    <div v-if="result" class="result">
-      <div class="result-head">
-        <h3>排盘结果</h3>
-        <div class="save-row">
-          <el-input v-model="saveTitle" placeholder="给这份命盘起个名字（可选）" style="width: 220px" />
-          <el-button type="primary" plain :loading="saving" @click="onSave">保存命盘</el-button>
-        </div>
-      </div>
-
-      <ChartBoard :result="result" />
-
+        <ChartFrame
+      v-if="result"
+      v-model:save-title="saveTitle"
+      title="排盘结果"
+      title-placeholder="给这份命盘起个名字（可选）"
+      :result="result"
+      :saving="saving"
+      save-text="保存命盘"
+      @save="onSave"
+    >
       <div class="next-step-card">
         <div class="step-icon">解</div>
         <div class="step-body">
@@ -213,7 +212,7 @@ const result = computed(() => store.result)
         </div>
         <el-button class="step-btn" type="primary" plain @click="onSave">保存命盘</el-button>
       </div>
-    </div>
+        </ChartFrame>
   </div>
 </template>
 
@@ -266,29 +265,6 @@ const result = computed(() => store.result)
   font-size: 12px;
   color: var(--xs-text-muted);
   line-height: 1.6;
-}
-
-.result {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.result-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.result-head h3 {
-  margin: 0;
-}
-
-.save-row {
-  display: flex;
-  gap: 8px;
 }
 
 .range-dash {
