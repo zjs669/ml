@@ -8,6 +8,10 @@
 删了它知识检索会退化成 LIKE 兜底，命中率明显下降。
 
 Revision ID: 538bc9645ca7
+
+文件名：<序号>_<描述>.py。序号只为阅读方便，**Alembic 不读文件名** ——
+它读本文件里的 `revision` 值（538bc9645ca7），数据库 alembic_version 表存的也是这个值。
+所以重命名文件是安全的，改 `revision` 值才危险。
 Revises: e6b2d4a8c930
 Create Date: 2026-10-26 23:17:09.660145
 """

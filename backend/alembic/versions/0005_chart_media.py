@@ -1,6 +1,10 @@
 """chart media（面相 / 手相图片元信息）
 
 Revision ID: e6b2d4a8c930
+
+文件名：<序号>_<描述>.py。序号只为阅读方便，**Alembic 不读文件名** ——
+它读本文件里的 `revision` 值（undefined），数据库 alembic_version 表存的也是这个值。
+所以重命名文件是安全的，改 `revision` 值才危险。
 Revises: d3f7a2c9b105
 Create Date: 2026-10-25 23:50:00.000000
 
