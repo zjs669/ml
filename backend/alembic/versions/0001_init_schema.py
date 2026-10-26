@@ -1,12 +1,12 @@
 """init schema
 
 Revision ID: 36ef0bbc152f
+Revises: 
+Create Date: 2026-10-24 16:23:35.374940
 
 文件名：<序号>_<描述>.py。序号只为阅读方便，**Alembic 不读文件名** ——
 它读本文件里的 `revision` 值（36ef0bbc152f），数据库 alembic_version 表存的也是这个值。
 所以重命名文件是安全的，改 `revision` 值才危险。
-Revises: 
-Create Date: 2026-10-24 16:23:35.374940
 """
 from __future__ import annotations
 
