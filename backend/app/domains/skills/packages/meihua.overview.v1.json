@@ -1,0 +1,63 @@
+{
+  "skill_key": "meihua.overview.v1",
+  "version": "1.0.0",
+  "domain": "meihua",
+  "title": "梅花易数解读",
+  "description": "从起卦数、本卦、互卦、变卦、错卦、综卦与体用五行说明卦象结构，不判吉凶。",
+  "when": {
+    "depths": [
+      "brief",
+      "detailed"
+    ],
+    "requires_relations": false,
+    "min_relations": 0,
+    "topics": [
+      "overview",
+      "structure"
+    ]
+  },
+  "accepted_day_boundaries": [
+    "zi_hour_policy_a",
+    "zi_hour_policy_b",
+    "midnight",
+    "same_day",
+    "none"
+  ],
+  "accepted_year_boundaries": [
+    "lichun",
+    "lichun_day",
+    "lunar_new_year",
+    "midnight",
+    "prev_qi",
+    "none"
+  ],
+  "retrieval": {
+    "topics": [
+      "梅花易数",
+      "体用",
+      "互卦",
+      "变卦",
+      "错卦",
+      "综卦",
+      "先天八卦数"
+    ],
+    "top_k": 6
+  },
+  "output_schema": "report_v1",
+  "prompt_template": "meihua_overview_v1.txt",
+  "max_output_tokens": 4000,
+  "eval_cases": [
+    {
+      "case_id": "meihua-brief-default",
+      "input": {
+        "depth": "brief",
+        "relation_count": 0,
+        "topic": null,
+        "convention": {}
+      },
+      "expect": {
+        "skill_key": "meihua.overview.v1"
+      }
+    }
+  ]
+}

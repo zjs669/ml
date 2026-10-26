@@ -11,6 +11,17 @@ from typing import Any
 
 from app.domains.llm.mock import SAFETY_NOTE, pillar_sentence
 
+
+def _is_pillar_struct(value: Any) -> bool:
+    """判断 `facts["pillars"][key]` 是不是四柱结构。
+
+    降级模板原先假定所有域都有四柱，但大六壬的 `pillars` 是
+    `{"year": "丙午", ...}` 这样的字符串字典 —— 直接调 `pillar_sentence`
+    会抛 `AttributeError`，把「降级」变成「500」。降级路径必须对所有域安全：
+    结构不对就跳过，不猜、不硬转。
+    """
+    return isinstance(value, dict) and "text" in value and "stem" in value
+
 REASON_TEMPLATES = {
     "validation": "本次 AI 解读未通过服务端校验（{reason}），已降级为仅展示盘面事实。",
     "upstream": "模型服务暂时不可用（{reason}），本次未生成任何解释，已降级为仅展示盘面事实。",
@@ -30,10 +41,14 @@ def build_degraded(
     fatal_codes: list[str] | None = None,
 ) -> dict[str, Any]:
     observations: list[dict[str, Any]] = []
-    for key in ("year", "month", "day", "hour"):
-        pillar = facts.get("pillars", {}).get(key)
-        if pillar:
-            observations.append({"fact": pillar_sentence(key, pillar), "rule_ids": [], "citation_ids": []})
+    pillars = facts.get("pillars")
+    if isinstance(pillars, dict):
+        for key in ("year", "month", "day", "hour"):
+            pillar = pillars.get(key)
+            if _is_pillar_struct(pillar):
+                observations.append(
+                    {"fact": pillar_sentence(key, pillar), "rule_ids": [], "citation_ids": []}
+                )
 
     counts = facts.get("five_elements_count", {})
     raw = counts.get("raw", {})
@@ -66,11 +81,18 @@ def build_degraded(
         uncertainties.append("知识库依据不足，因此未给出任何传统解释。")
     uncertainties.append("不同流派对口径与权重的处理存在差异，本页按已声明口径输出。")
 
+    # summary 不能假定「日主」存在：只有四柱盘有日主，其他域没有
+    day_master = facts.get("day_master")
+    if isinstance(day_master, dict) and day_master.get("stem"):
+        lead = (
+            f"日主为{day_master.get('stem', '')}"
+            f"（{day_master.get('polarity', '')}{day_master.get('element', '')}），"
+        )
+    else:
+        lead = ""
     return {
         "summary": (
-            f"日主为{facts.get('day_master', {}).get('stem', '')}"
-            f"（{facts.get('day_master', {}).get('polarity', '')}{facts.get('day_master', {}).get('element', '')}），"
-            f"已触发 {len(rules)} 条关系规则。AI 解读部分已降级，仅保留确定性事实。"
+            f"{lead}已触发 {len(rules)} 条关系规则。AI 解读部分已降级，仅保留确定性事实。"
         ),
         "observations": observations,
         "traditional_interpretations": [],

@@ -1,0 +1,67 @@
+{
+  "skill_key": "taiyi.overview.v1",
+  "version": "1.0.0",
+  "domain": "taiyi",
+  "title": "太乙九星解读",
+  "description": "从年月日时四层九星的位置与属性说明观测结果，不做七十二局推演。",
+  "when": {
+    "depths": [
+      "brief",
+      "detailed"
+    ],
+    "requires_relations": false,
+    "min_relations": 0,
+    "topics": [
+      "overview",
+      "structure"
+    ]
+  },
+  "accepted_day_boundaries": [
+    "zi_hour_policy_a",
+    "zi_hour_policy_b",
+    "midnight",
+    "same_day",
+    "none"
+  ],
+  "accepted_year_boundaries": [
+    "lichun",
+    "lichun_day",
+    "lunar_new_year",
+    "midnight",
+    "prev_qi",
+    "none"
+  ],
+  "retrieval": {
+    "topics": [
+      "太乙",
+      "九星",
+      "太乙九星",
+      "摄提",
+      "轩辕",
+      "招摇",
+      "天符",
+      "青龙",
+      "咸池",
+      "太阴",
+      "天乙"
+    ],
+    "top_k": 6
+  },
+  "output_schema": "report_v1",
+  "prompt_template": "taiyi_overview_v1.txt",
+  "max_output_tokens": 4000,
+  "eval_cases": [
+    {
+      "case_id": "taiyi-brief-default",
+      "input": {
+        "depth": "brief",
+        "relation_count": 0,
+        "topic": null,
+        "convention": {}
+      },
+      "expect": {
+        "skill_key": "taiyi.overview.v1"
+      }
+    }
+  ]
+}

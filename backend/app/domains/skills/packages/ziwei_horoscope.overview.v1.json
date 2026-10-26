@@ -1,0 +1,63 @@
+{
+  "skill_key": "ziwei_horoscope.overview.v1",
+  "version": "1.0.0",
+  "domain": "ziwei_horoscope",
+  "title": "紫微运限解读",
+  "description": "从大限、小限、流年、流月、流日、流时六层落宫说明时间结构，不判吉凶。",
+  "when": {
+    "depths": [
+      "brief",
+      "detailed"
+    ],
+    "requires_relations": false,
+    "min_relations": 0,
+    "topics": [
+      "overview",
+      "structure"
+    ]
+  },
+  "accepted_day_boundaries": [
+    "zi_hour_policy_a",
+    "zi_hour_policy_b",
+    "midnight",
+    "same_day",
+    "none"
+  ],
+  "accepted_year_boundaries": [
+    "lichun",
+    "lichun_day",
+    "lunar_new_year",
+    "midnight",
+    "prev_qi",
+    "none"
+  ],
+  "retrieval": {
+    "topics": [
+      "紫微",
+      "运限",
+      "大限",
+      "小限",
+      "流年",
+      "流月",
+      "斗君"
+    ],
+    "top_k": 6
+  },
+  "output_schema": "report_v1",
+  "prompt_template": "ziwei_horoscope_overview_v1.txt",
+  "max_output_tokens": 4000,
+  "eval_cases": [
+    {
+      "case_id": "ziwei_horoscope-brief-default",
+      "input": {
+        "depth": "brief",
+        "relation_count": 0,
+        "topic": null,
+        "convention": {}
+      },
+      "expect": {
+        "skill_key": "ziwei_horoscope.overview.v1"
+      }
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "skill_key": "astrology.overview.v1",
+  "version": "1.0.0",
+  "domain": "astrology",
+  "title": "西洋占星解读",
+  "description": "从太阳月亮黄经、上升、天顶与整宫制宫位说明结构，明确列出未实现项。",
+  "when": {
+    "depths": [
+      "brief",
+      "detailed"
+    ],
+    "requires_relations": false,
+    "min_relations": 0,
+    "topics": [
+      "overview",
+      "structure"
+    ]
+  },
+  "accepted_day_boundaries": [
+    "zi_hour_policy_a",
+    "zi_hour_policy_b",
+    "midnight",
+    "same_day",
+    "none"
+  ],
+  "accepted_year_boundaries": [
+    "lichun",
+    "lichun_day",
+    "lunar_new_year",
+    "midnight",
+    "prev_qi",
+    "none"
+  ],
+  "retrieval": {
+    "topics": [
+      "占星",
+      "黄道",
+      "上升点",
+      "天顶",
+      "宫位",
+      "相位",
+      "太阳",
+      "月亮"
+    ],
+    "top_k": 6
+  },
+  "output_schema": "report_v1",
+  "prompt_template": "astrology_overview_v1.txt",
+  "max_output_tokens": 4000,
+  "eval_cases": [
+    {
+      "case_id": "astrology-brief-default",
+      "input": {
+        "depth": "brief",
+        "relation_count": 0,
+        "topic": null,
+        "convention": {}
+      },
+      "expect": {
+        "skill_key": "astrology.overview.v1"
+      }
+    }
+  ]
+}

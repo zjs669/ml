@@ -1,0 +1,65 @@
+{
+  "skill_key": "almanac.overview.v1",
+  "version": "1.0.0",
+  "domain": "almanac",
+  "title": "黄历解读",
+  "description": "从日级条目（宜忌、值星、星宿、神煞、方位、九星、时辰）说明当日黄历结构，不做择日推荐。",
+  "when": {
+    "depths": [
+      "brief",
+      "detailed"
+    ],
+    "requires_relations": false,
+    "min_relations": 0,
+    "topics": [
+      "overview",
+      "structure"
+    ]
+  },
+  "accepted_day_boundaries": [
+    "zi_hour_policy_a",
+    "zi_hour_policy_b",
+    "midnight",
+    "same_day",
+    "none"
+  ],
+  "accepted_year_boundaries": [
+    "lichun",
+    "lichun_day",
+    "lunar_new_year",
+    "midnight",
+    "prev_qi",
+    "none"
+  ],
+  "retrieval": {
+    "topics": [
+      "黄历",
+      "通书",
+      "宜忌",
+      "值星",
+      "星宿",
+      "神煞",
+      "方位",
+      "九星",
+      "时辰"
+    ],
+    "top_k": 6
+  },
+  "output_schema": "report_v1",
+  "prompt_template": "almanac_overview_v1.txt",
+  "max_output_tokens": 4000,
+  "eval_cases": [
+    {
+      "case_id": "almanac-brief-default",
+      "input": {
+        "depth": "brief",
+        "relation_count": 0,
+        "topic": null,
+        "convention": {}
+      },
+      "expect": {
+        "skill_key": "almanac.overview.v1"
+      }
+    }
+  ]
+}

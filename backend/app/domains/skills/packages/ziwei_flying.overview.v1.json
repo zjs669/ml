@@ -1,0 +1,64 @@
+{
+  "skill_key": "ziwei_flying.overview.v1",
+  "version": "1.0.0",
+  "domain": "ziwei_flying",
+  "title": "紫微飞星解读",
+  "description": "从宫干四化的定向查询结果说明链路，不做复合推演。",
+  "when": {
+    "depths": [
+      "brief",
+      "detailed"
+    ],
+    "requires_relations": false,
+    "min_relations": 0,
+    "topics": [
+      "overview",
+      "structure"
+    ]
+  },
+  "accepted_day_boundaries": [
+    "zi_hour_policy_a",
+    "zi_hour_policy_b",
+    "midnight",
+    "same_day",
+    "none"
+  ],
+  "accepted_year_boundaries": [
+    "lichun",
+    "lichun_day",
+    "lunar_new_year",
+    "midnight",
+    "prev_qi",
+    "none"
+  ],
+  "retrieval": {
+    "topics": [
+      "紫微",
+      "飞星",
+      "四化",
+      "宫干",
+      "禄",
+      "权",
+      "科",
+      "忌"
+    ],
+    "top_k": 6
+  },
+  "output_schema": "report_v1",
+  "prompt_template": "ziwei_flying_overview_v1.txt",
+  "max_output_tokens": 4000,
+  "eval_cases": [
+    {
+      "case_id": "ziwei_flying-brief-default",
+      "input": {
+        "depth": "brief",
+        "relation_count": 0,
+        "topic": null,
+        "convention": {}
+      },
+      "expect": {
+        "skill_key": "ziwei_flying.overview.v1"
+      }
+    }
+  ]
+}

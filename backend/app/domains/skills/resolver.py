@@ -39,6 +39,17 @@ def _score(spec: SkillSpec, *, depth: str, relation_count: int, topic: str | Non
 
 
 def _check_convention(spec: SkillSpec, convention: dict) -> None:
+    """口径匹配检查。
+
+    只校验**该域自己声明的口径字段**。`day_boundary` / `year_boundary` 是四柱系的
+    概念；黄历用 `midnight`、占星根本不用换日、塔罗更没有年界 —— 对这些域强行套
+    「换日口径白名单」会让技能永远匹配不上，报错信息还会误导用户去「切换口径」，
+    而那个口径在该域根本不存在。
+
+    判定方式：技能包声明了 `accepted_*` 白名单，且**命盘口径里确实带这个字段**时才检查。
+    为此这里改为「只要该域的口径里出现该字段，就必须在白名单内」，同时把
+    非四柱域的白名单写成「包含该域实际取值」——由技能包自己负责，不在代码里特判域。
+    """
     day_boundary = convention.get("day_boundary")
     year_boundary = convention.get("year_boundary")
     if day_boundary and day_boundary not in spec.accepted_day_boundaries:

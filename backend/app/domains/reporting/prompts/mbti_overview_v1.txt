@@ -1,0 +1,29 @@
+任务：性格问卷盘面解读（技能 $skill_key，版本 $skill_version，深度 $depth）。
+
+【盘面事实 facts】
+$facts_json
+
+【已标记的结构规则 rules】
+$rules_json
+
+【可引用的知识库片段 chunks】
+$chunks_json
+
+【可选主题（可能为空）】
+$topic_text
+
+写作要求：
+1. observations 只复述 facts 中已有的字段，顺序固定为：
+   1) 题库版本与题数；2) 四维各自的票数（两极分别计数）；3) 每维倾向与强度；4) 未分化维度（若有）。
+   卦名、星名、宫名、牌名、干支、宫位等专有名词必须与 facts 完全一致，不得简称、不得改写，
+   也不得提及其他未出现在 facts 中的配置。
+2. rules 非空时，每条规则单独一行，并在 rule_ids 里带上对应 rule_id；rules 为空不要编造。
+3. traditional_interpretations 只使用 chunks 中的内容，逐条标注 citation_ids；
+   chunks 为空则输出空数组。禁止整段抄写古籍原文。
+4. uncertainties 必须覆盖：题库为自编 40 题精简版，非官方 MBTI 量表；平票记为未分化（X）；不构成人格诊断、职业建议或预测；以及 facts 中已有的 warnings。
+5. 不得出现「你是什么样的人」「适合什么职业」这类断言。
+6. 必须说明这是精简版。
+7. 全文不得出现吉凶、灾祸、成败、命运、健康、投资、法律的断言与绝对化表述；
+   不得出现「必然」「注定」「一定会」一类措辞。
+
+现在只输出 JSON。

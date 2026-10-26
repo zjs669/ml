@@ -1,0 +1,64 @@
+{
+  "skill_key": "daliuren.overview.v1",
+  "version": "1.0.0",
+  "domain": "daliuren",
+  "title": "大六壬解读",
+  "description": "从月将、天地盘、四课、三传说明盘面结构，复杂课体未实现时如实说明。",
+  "when": {
+    "depths": [
+      "brief",
+      "detailed"
+    ],
+    "requires_relations": false,
+    "min_relations": 0,
+    "topics": [
+      "overview",
+      "structure"
+    ]
+  },
+  "accepted_day_boundaries": [
+    "zi_hour_policy_a",
+    "zi_hour_policy_b",
+    "midnight",
+    "same_day",
+    "none"
+  ],
+  "accepted_year_boundaries": [
+    "lichun",
+    "lichun_day",
+    "lunar_new_year",
+    "midnight",
+    "prev_qi",
+    "none"
+  ],
+  "retrieval": {
+    "topics": [
+      "大六壬",
+      "月将",
+      "天地盘",
+      "四课",
+      "三传",
+      "天将",
+      "贵人",
+      "贼克"
+    ],
+    "top_k": 6
+  },
+  "output_schema": "report_v1",
+  "prompt_template": "daliuren_overview_v1.txt",
+  "max_output_tokens": 4000,
+  "eval_cases": [
+    {
+      "case_id": "daliuren-brief-default",
+      "input": {
+        "depth": "brief",
+        "relation_count": 0,
+        "topic": null,
+        "convention": {}
+      },
+      "expect": {
+        "skill_key": "daliuren.overview.v1"
+      }
+    }
+  ]
+}

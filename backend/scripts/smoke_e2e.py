@@ -53,6 +53,48 @@ CASES: dict[str, dict[str, Any]] = {
         "timezone": "Asia/Shanghai",
         "convention": {},
     },
+    # ---- 2026-10 重构新增 ----
+    "almanac": {"date": "2026-01-01", "timezone": "Asia/Shanghai"},
+    "xiaoliuren": {
+        "input_mode": "gregorian",
+        "date": "2026-01-01T00:00:00",
+        "hour": 12,
+        "timezone": "Asia/Shanghai",
+    },
+    "meihua": {"method": "numbers", "numbers": [7, 13]},
+    "tarot": {"spread": "three", "seed": "smoke-e2e"},
+    "taiyi": {"date": "2026-01-01", "mode": "day", "timezone": "Asia/Shanghai"},
+    "daliuren": {"cast_datetime": "2026-01-01T12:00:00", "timezone": "Asia/Shanghai"},
+    "astrology": {
+        "birth_datetime": "1990-06-15T09:10:00",
+        "timezone": "Asia/Shanghai",
+        "latitude": 31.23,
+        "longitude": 121.47,
+    },
+    "ziwei_horoscope": {
+        "birth_datetime": "1990-06-15T09:10:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "female",
+        "target_date": "2026-01-01T00:00:00",
+    },
+    "ziwei_flying": {
+        "birth_datetime": "1990-06-15T09:10:00",
+        "timezone": "Asia/Shanghai",
+        "gender": "female",
+        "query_type": "flies_from",
+        "from_palace": "命宫",
+    },
+    "hepan": {
+        "left": {
+            "label": "甲方",
+            "pillars": {"year": "庚午", "month": "壬午", "day": "辛亥", "hour": "癸巳"},
+        },
+        "right": {
+            "label": "乙方",
+            "pillars": {"year": "壬申", "month": "戊申", "day": "丙辰", "hour": "甲午"},
+        },
+    },
+    "dream": {"text": "梦见一条蛇在水边游走"},
 }
 
 
@@ -88,6 +130,37 @@ def hint(domain: str, facts: dict[str, Any]) -> str:
             f"→ {changed.get('name') or '无变卦'} "
             f"动爻{facts['moving_lines'] or '无'}"
         )
+    if domain == "almanac":
+        return f"{facts['lunar_date']['text']} 宜{len(facts['yi'])}项 忌{len(facts['ji'])}项 值星{facts['day_pillar']['zhi_xing']}"
+    if domain == "xiaoliuren":
+        return f"月{facts['month_palace']['name']}→日{facts['day_palace']['name']}→时{facts['result_palace']['name']}"
+    if domain == "meihua":
+        return f"{facts['original']['name']}→{facts['changed']['name']} 体{facts['body_use']['body']['trigram']}用{facts['body_use']['use']['trigram']}"
+    if domain == "tarot":
+        return " / ".join(f"{item['position']}:{item['name_cn']}{item['orientation_cn']}" for item in facts["cards"])
+    if domain == "taiyi":
+        return f"{facts['primary']['taiyi_name']}（{facts['primary']['element']}·{facts['primary']['position']}）"
+    if domain == "daliuren":
+        chuan = facts.get("san_chuan") or {}
+        first = (chuan.get("first") or {}).get("branch") or "未判定"
+        return f"月将{facts['month_general']['branch']} 初传{first} 课体{facts['san_chuan_status']['method']}"
+    if domain == "astrology":
+        return (
+            f"太阳{facts['planets']['sun']['sign']} "
+            f"月亮{facts['planets']['moon']['sign']} "
+            f"上升{facts['angles']['ascendant']['sign']}"
+        )
+    if domain == "ziwei_horoscope":
+        return " ".join(f"{item['layer']}{item['palace'] or '—'}" for item in facts["layers"])
+    if domain == "ziwei_flying":
+        answer = facts["answer"]
+        if answer["query_type"] == "flies_from":
+            return f"{answer['from_palace']} 四化去向 {len(answer['flights'])} 条"
+        return f"{answer['query_type']} 命中 {len(answer.get('sources') or answer.get('matches') or [])} 条"
+    if domain == "hepan":
+        return f"跨盘{facts['summary']['cross_count']}条 盘内{facts['summary']['internal_count']}条"
+    if domain == "dream":
+        return "意象：" + "、".join(item["keyword"] for item in facts["keywords"]) or "未命中"
     return (
         f"{facts['dun']['text']} "
         f"值符{facts['zhifu']['star']}→{facts['zhifu']['landing_name']} "

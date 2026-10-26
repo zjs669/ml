@@ -4,7 +4,7 @@
 
 > 确定性引擎算事实 → 规则引擎判关系 → 知识库检索 → AI 只做解释 → 服务端校验引用与事实 → 存档与额度结算
 
-当前已把同一闭环复用到**四个术数**：四柱八字、紫微斗数、六爻、奇门遁甲，并补上四柱反查与真实大模型接入。真实支付网关、向量检索、微调仍推迟。
+当前已把同一闭环复用到 **16 个域**：四柱八字、紫微斗数（含运限/飞星）、六爻、奇门遁甲、黄历、小六壬、梅花易数、大六壬、太乙九星、塔罗、西洋占星、关系合盘、性格问卷、解梦，以及面相/手相两个视觉域。真实支付网关、向量检索、微调仍推迟。
 
 ---
 
@@ -13,7 +13,10 @@
 | 能力 | 说明 |
 | --- | --- |
 | 排盘 | 公历输入 → 四柱（含纳音/旬空/地势/自坐/神煞）、藏干、十神、五行加权、大运、**流年窗口**（干支/十神/虚岁/所属大运）、节气交节时刻与临界提示 |
-| 多术数 | 紫微斗数（三合派）、六爻（京房纳甲）、奇门遁甲（时家转盘拆补法）与四柱共用同一套 `ChartResult` 外壳、报告管线与校验链；每个术数只实现一种口径，并在结果页回显。紫微含 14 主星 + 14 辅星 + 16 杂曜 + 长生/博士/将前/岁前十二神，四化分生年/宫干/大限/流年四层，另有小限、流年表、三方四正与**飞星串联（只列链路）** |
+| 多术数 | 16 个域共用同一套 `ChartResult` 外壳、报告管线与校验链；每个域只实现一种口径并在结果页回显。清单以 `GET /api/v1/meta/domains` 为唯一事实来源 |
+| 紫微 | 14 主星 + 14 辅星 + 16 杂曜 + 长生/博士/将前/岁前十二神，四化分生年/宫干/大限/流年四层，另有小限、流年表、三方四正与飞星串联；**运限**叠六层时间（大限→小限→流年→流月→流日→流时）；**飞星**支持三类定向查询 |
+| 新增确定性域 | 黄历（通书日级条目）、小六壬（六宫递推）、梅花易数（六种起卦 + 互错综变 + 体用）、大六壬（月将加时 + 四课 + 贼克法三传）、太乙九星（四层九星观测）、塔罗（78 张无放回 + 9 种牌阵）、西洋占星（日月 + 上升/天顶 + 整宫制）、关系合盘（复用 66 条规则）、性格问卷（自编 40 题）、解梦（意象词表） |
+| 视觉分析 | 面相 / 手相：上传图片 → 剥 EXIF → 视觉模型 → 结构化观察。需登录、按次计费、失败全额退回；未配置视觉模型时返回 503 而**不回落文本模型** |
 | 四柱反查 | 给定任意几柱 + 年份范围，反查公历日期与时窗；与 `calculate()` 严格互逆（500 例往返测试锁死），候选可一键保存并生成解读 |
 | 关系 | **66 条**规则：三会/三合/六合/半会/六冲/三刑/相刑/自刑/相害/相破/天干五合/天干相冲/天干相克，每条带 `rule_id` 与来源，**只报触发不报吉凶** |
 | 口径 | `year_boundary` / `day_boundary` / `solar_time` / `school` 四项可选，结果回显并随命盘存档 |
@@ -27,7 +30,16 @@
 | 计费 | 每日免费额度 + 单次/会员套餐 + 三态账本（预扣/结算/退还）+ Mock 支付回调 + 幂等；`/billing/config` 公开当前支付模式与可用通道 |
 | 合规 | 隐私政策、用户协议、AI 使用说明、退款说明、投诉入口；AI 生成内容显式标识 |
 
-**明确不做**：真实支付网关、向量检索、微调、Web 运营后台（用 CLI 代替）、分享激励；紫微的流年/流月推演与格局吉凶、六爻的断语与应期、奇门的择日与法术奇门、置闰法与飞盘奇门。
+**明确不做**：真实支付网关、向量检索、微调、Web 运营后台（用 CLI 代替）、分享激励；六爻的断语与应期、奇门的择日与法术奇门、置闰法与飞盘奇门、紫微的格局吉凶。
+
+**各域已知边界**（都在结果页的 `warnings` 里写明，不静默省略）：
+
+- 大六壬只做贼克法三传，涉害/遥克/昴星/别责/八专/伏吟/返吟未实现；
+- 太乙只做九星观测，七十二局、主客算、大小将、十六神未实现；
+- 西洋占星只算太阳与月亮，十行星、交点、莉莉丝、Placidus 等宫制未实现
+  （`pyswisseph` 需要 MSVC 编译，本机装不上；未实现项通过 `unavailable` 显式列出）；
+- 性格问卷为自编 40 题精简版，非官方 MBTI 量表；
+- 新域的知识源目录尚未补齐，因此 `traditional_interpretations` 目前为空数组。
 
 ## 2. 目录结构
 
@@ -35,34 +47,49 @@
 backend/
   app/
     core/               config / db / errors / logging / security / ratelimit
-    api/v1/             auth charts reports knowledge billing me feedback
+    api/v1/             auth charts reports knowledge billing me feedback meta reverse vision mbti
     domains/
-      calendar_core/    儒略日、甲子、节气（Meeus + lunar-python 双源）、真太阳时
+      calendar_core/    儒略日、甲子、节气（Meeus + lunar-python 双源）、真太阳时、太阳视黄经
       bazi/             四柱引擎、藏干、十神、五行、大运、反查（reverse.py）
-      ziwei/            紫微斗数 sanhe_default_v1（安星法、杂曜、长生/博士十二神、四层四化）
+      ziwei/            紫微斗数 sanhe_default_v1（安星法、杂曜、长生/博士十二神、四层四化、飞星串联）
+      ziwei_horoscope/  紫微运限：六层时间叠在本命盘上（斗君法起流月）
+      ziwei_flying/     紫微飞星：三类定向查询，复用本命盘宫干四化
       liuyao/           六爻 jingfang_najia_v1 + 64 卦常量（hexagrams.py）
       qimen/            奇门遁甲 chaibu_zhuanpan_v1（时家转盘拆补）
-      registry.py       术数注册表：domain → 入参模型 + 计算函数（新增术数只改这里）
-      relations/        规则 YAML + 规则引擎
+      almanac/          黄历：通书日级条目（条目取自 lunar-python）
+      xiaoliuren/       小六壬：六宫递推
+      meihua/           梅花易数：六种起卦 + 互错综变 + 体用（复用 liuyao 卦表）
+      daliuren/         大六壬：月将加时 + 天地盘 + 四课 + 贼克法三传
+      taiyi/            太乙九星：四层九星观测
+      tarot/            塔罗：78 张牌无放回抽取 + 9 种牌阵
+      astrology/        西洋占星（简化）：日月黄经 + 上升/天顶 + 整宫制
+      hepan/            关系合盘：复用 relations 规则判定跨盘与盘内
+      mbti/             性格问卷：自编 40 题四维计分
+      dream/            解梦：意象词表匹配
+      vision/           面相 / 手相：提示词 + 分析编排（无确定性算法）
+      registry.py       术数注册表：domain → 入参模型 + 计算函数 + kind + schools
+      relations/        规则 YAML + 规则引擎（支持自定义位置名以复用跨盘判定）
       knowledge/        ingest 与检索
-      skills/           任务包（packages）+ SKILL.md 加载器（skillfile）+ 兼容层（distilled）
-      llm/              Provider 抽象、Mock、OpenAI 兼容、validator
+      skills/           任务包（packages）+ SKILL.md 加载器（skillfile）
+      llm/              Provider 抽象、Mock、OpenAI 兼容（含视觉多模态）、validator
       reporting/        报告编排、提示词、降级模板
       billing/          plans / ledger / orders / webhooks
+    services/           media.py（MIME 校验 / 剥 EXIF / 内容寻址 / 留存期清理）、export.py
     models/ schemas/ repositories/
-  alembic/              0001_init 起
-  tests/                1340 项左右，含四术数引擎、反查往返、追问、技能注入、架构守卫、JWT 攻击面、并发与幂等
-  scripts/              crosscheck、smoke_api、smoke_e2e、prepare_bench、bench_eval、bench_stats、distill_skills、distill_round、encrypt_secrets、admin/*
+  alembic/              5 条迁移（init → llm_calls → auth_tokens → report_followups → chart_media）
+  tests/                1650+ 项：16 域引擎、跨域报告链路、反查往返、追问、技能注入、架构守卫、JWT 攻击面、并发与幂等
+  scripts/              crosscheck、smoke_api、smoke_e2e（15 域）、prepare_bench、bench_eval、bench_stats、distill_skills、distill_round、encrypt_secrets、admin/*
   data/bench/           本地题库与错例集（体积大、许可证各异，已 gitignore）
-  skills/               每次 AI 调用前必读的 SKILL.md（全局 + 四术数 + cards）
+  skills/               每次 AI 调用前必读的 SKILL.md（全局 + 16 域）
 frontend/
-  src/api/              axios 封装与全量契约类型
+  src/api/              axios 封装、契约类型、domains/mbti/vision 三个新客户端
+  src/config/           domainForms.ts：8 个同构域的声明式表单配置
   src/stores/           auth / chart / usage
-  src/components/       chart / report / common
-  src/pages/            全部页面
+  src/components/       chart（含 GenericBoard 兜底）/ report / common
+  src/pages/            28 个页面（含 10 个薄页面 + 问卷页 + 合盘页 + 两个视觉页）
   src/router/ src/styles/
 infra/                  docker-compose.yml、nginx.conf、两个 Dockerfile、backup.sh
-docs/                   docs/README.md 为索引：口径/基准/评测/题库/技能/安全/产品文档
+docs/                   docs/README.md 为索引：重构方案/口径/架构/数据库/面相/基准/评测/题库/技能/安全
 ```
 
 依赖方向硬约束：`api → domains → repositories/models → core`；`domains/bazi` 不 import `llm`/`billing`；`owner_user_id` 过滤只在 `repositories/` 做。以上由 `tests/test_architecture.py` 守卫（含纯计算域禁触数据库/模型、前端 api 不反向依赖 UI），具体规则与例外见 [docs/架构与验收.md](docs/架构与验收.md)。
@@ -73,7 +100,8 @@ docs/                   docs/README.md 为索引：口径/基准/评测/题库/�
 
 - Python 3.11（本项目实测 3.11.17）
 - Node ≥ 20.19（实测 v25）
-- MySQL 8（本项目开发实例跑在 `127.0.0.1:3307`，独立 datadir）
+- MySQL 8（本项目开发实例是 Docker 容器 `xuanshu-mysql`，对外 `127.0.0.1:3307`；
+  系统里 3306 上的 MySQL8 服务是另一个实例，本项目不连它。见 [docs/数据库.md](docs/数据库.md)）
 
 ### 3.2 数据库
 
@@ -265,6 +293,13 @@ python -m scripts.encrypt_secrets           # 加密并把明文改成 enc:v1:..
 | 追问不重新检索知识 | 只能引用原报告已引用的片段；这是为了前后口径一致，新疑点请重新生成报告 |
 | 紫微大限/流年四化需手动填年龄与年份 | 未填时不出该层，也**不推断**年龄；填了才按大限宫干/流年干各推一组 |
 | 同一幂等键的首次写入存在极小并发窗口 | 唯一约束保证不会重复扣费；极端并发下客户端可能收到一次 500，重试即读到同一行账本 |
+| 大六壬只实现贼克法三传 | 复杂课体三传留空并在 `san_chuan_status.reason` 写明原因 |
+| 太乙只实现九星观测 | 七十二局/主客算/大小将未实现，口径字段显式声明 |
+| 占星只有日月 | `pyswisseph` 需 MSVC 编译装不上；未实现项通过 `unavailable` 显式列出 |
+| 性格问卷 40 题（非 90+） | 题库需逐题审校，精简版信度更低，页面标注「仅供参考」 |
+| 新域知识源目录未补齐 | 报告只给盘面事实，`traditional_interpretations` 为空数组 |
+| 视觉模型未配置 | `/vision/*` 返回 503 `VISION_NOT_CONFIGURED`，不回落文本模型 |
+| 图片留存期默认 30 天 | 到期由 `purge_expired_media` 删除；需定时任务调用 |
 
 ## 11. 报告追问
 

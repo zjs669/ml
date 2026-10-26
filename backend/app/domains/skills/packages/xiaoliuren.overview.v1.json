@@ -1,0 +1,64 @@
+{
+  "skill_key": "xiaoliuren.overview.v1",
+  "version": "1.0.0",
+  "domain": "xiaoliuren",
+  "title": "小六壬解读",
+  "description": "从三宫递推（月宫→日宫→时宫）说明落点与宫性，不推应期、不判吉凶。",
+  "when": {
+    "depths": [
+      "brief",
+      "detailed"
+    ],
+    "requires_relations": false,
+    "min_relations": 0,
+    "topics": [
+      "overview",
+      "structure"
+    ]
+  },
+  "accepted_day_boundaries": [
+    "zi_hour_policy_a",
+    "zi_hour_policy_b",
+    "midnight",
+    "same_day",
+    "none"
+  ],
+  "accepted_year_boundaries": [
+    "lichun",
+    "lichun_day",
+    "lunar_new_year",
+    "midnight",
+    "prev_qi",
+    "none"
+  ],
+  "retrieval": {
+    "topics": [
+      "小六壬",
+      "六宫",
+      "大安",
+      "留连",
+      "速喜",
+      "赤口",
+      "小吉",
+      "空亡"
+    ],
+    "top_k": 6
+  },
+  "output_schema": "report_v1",
+  "prompt_template": "xiaoliuren_overview_v1.txt",
+  "max_output_tokens": 4000,
+  "eval_cases": [
+    {
+      "case_id": "xiaoliuren-brief-default",
+      "input": {
+        "depth": "brief",
+        "relation_count": 0,
+        "topic": null,
+        "convention": {}
+      },
+      "expect": {
+        "skill_key": "xiaoliuren.overview.v1"
+      }
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "skill_key": "tarot.overview.v1",
+  "version": "1.0.0",
+  "domain": "tarot",
+  "title": "塔罗解读",
+  "description": "从牌阵、位置与牌面关键词说明抽牌结果，不做事件预测。",
+  "when": {
+    "depths": [
+      "brief",
+      "detailed"
+    ],
+    "requires_relations": false,
+    "min_relations": 0,
+    "topics": [
+      "overview",
+      "structure"
+    ]
+  },
+  "accepted_day_boundaries": [
+    "zi_hour_policy_a",
+    "zi_hour_policy_b",
+    "midnight",
+    "same_day",
+    "none"
+  ],
+  "accepted_year_boundaries": [
+    "lichun",
+    "lichun_day",
+    "lunar_new_year",
+    "midnight",
+    "prev_qi",
+    "none"
+  ],
+  "retrieval": {
+    "topics": [
+      "塔罗",
+      "大阿卡纳",
+      "小阿卡纳",
+      "牌阵",
+      "正位",
+      "逆位"
+    ],
+    "top_k": 6
+  },
+  "output_schema": "report_v1",
+  "prompt_template": "tarot_overview_v1.txt",
+  "max_output_tokens": 4000,
+  "eval_cases": [
+    {
+      "case_id": "tarot-brief-default",
+      "input": {
+        "depth": "brief",
+        "relation_count": 0,
+        "topic": null,
+        "convention": {}
+      },
+      "expect": {
+        "skill_key": "tarot.overview.v1"
+      }
+    }
+  ]
+}
