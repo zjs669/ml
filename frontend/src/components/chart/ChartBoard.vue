@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { computed, type Component } from 'vue'
 
+import AlmanacBoard from './AlmanacBoard.vue'
 import BaziBoard from './BaziBoard.vue'
+import DaliurenBoard from './DaliurenBoard.vue'
 import GenericBoard from './GenericBoard.vue'
+import TarotBoard from './TarotBoard.vue'
 import ZiweiBoard from './ZiweiBoard.vue'
 import LiuyaoBoard from './LiuyaoBoard.vue'
 import QimenBoard from './QimenBoard.vue'
@@ -27,6 +30,9 @@ const BOARDS: Record<string, Component> = {
   ziwei: ZiweiBoard,
   liuyao: LiuyaoBoard,
   qimen: QimenBoard,
+  almanac: AlmanacBoard,
+  tarot: TarotBoard,
+  daliuren: DaliurenBoard,
 }
 
 const board = computed<Component>(() => BOARDS[props.result.domain] ?? GenericBoard)
