@@ -220,7 +220,7 @@ LLM_PRICE_OUTPUT_PER_1K=0
 ```bash
 cd backend
 python -m scripts.llm_selftest              # 连通性 + JSON 合法性 + 延迟/token
-python -m scripts.eval_reports --cases 10   # 跑基准命例，输出 docs/模型评测-报告管线.md
+python -m scripts.eval_reports --cases 10   # 跑基准命例，写入 docs/模型评测.md（第一部分）
 pytest tests/test_llm_provider.py -q        # 401/429/5xx/超时/围栏 等失败模式
 ```
 

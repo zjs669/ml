@@ -11,7 +11,7 @@
 产物：
 - `data/bench/train_attempts.jsonl` / `test_attempts.jsonl`（分开的作答历史）
 - `docs/题库复盘.md`（train）
-- `docs/模型评测-题库.md`（test）
+- `docs/模型评测.md`（第二部分·题库，test）
 - `docs/蒸馏记录.md`（每轮一行，含带卡/无卡的 delta）
 """
 
@@ -32,7 +32,7 @@ TEST = DATASET / "test.jsonl"
 TRAIN_ATTEMPTS = BACKEND_DIR / "data" / "bench" / "train_attempts.jsonl"
 TEST_ATTEMPTS = BACKEND_DIR / "data" / "bench" / "test_attempts.jsonl"
 REVIEW = REPO_ROOT / "docs" / "题库复盘.md"
-REPORT = REPO_ROOT / "docs" / "模型评测-题库.md"
+REPORT = REPO_ROOT / "docs" / "模型评测.md"
 LOG = REPO_ROOT / "docs" / "蒸馏记录.md"
 SUMMARY_DIR = BACKEND_DIR / "data" / "bench" / "summaries"
 
@@ -131,7 +131,7 @@ def main(argv: list[str] | None = None) -> int:
         f"{round_tag}-train",
         file=TRAIN,
         attempts=TRAIN_ATTEMPTS,
-        out=REPO_ROOT / "docs" / "模型评测-题库.md",
+        out=REPO_ROOT / "docs" / "模型评测.md",
         model=args.model,
         tokens=args.tokens,
         tag=f"{round_tag}-train",
@@ -169,7 +169,7 @@ def main(argv: list[str] | None = None) -> int:
         f"{round_tag}-test-noskill",
         file=TEST,
         attempts=TEST_ATTEMPTS,
-        out=REPO_ROOT / "docs" / "模型评测-题库-无技能.md",
+        out=REPO_ROOT / "docs" / "模型评测-无技能基线.md",
         model=args.model,
         tokens=args.tokens,
         tag=f"{round_tag}-test-noskill",

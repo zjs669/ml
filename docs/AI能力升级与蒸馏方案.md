@@ -149,7 +149,7 @@ backend/app/domains/skills/distilled/_draft/ # 蒸馏产出的草稿（不会被
 - 每题**先检索已审核知识片段**（`knowledge_repo.search`，top-3）再作答；命中率单独统计，
   库不可用时自动退化为无知识作答并在记录里标 `kb_error`。
 - 指标：**准确率**、知识库命中率、解析失败率、P50/P95 延迟、token 消耗、按 domain 分组准确率。
-- 输出 `docs/模型评测-题库.md`（覆盖生成），同时在终端打印失败样例 id，便于二次蒸馏。
+- 输出 `docs/模型评测.md`（第二部分·题库）（覆盖生成），同时在终端打印失败样例 id，便于二次蒸馏。
 - 每次作答**追加**到 `data/bench/attempts.jsonl`（带 `run_id / timestamp / kb_chunks`），
   不追加就统计不出「同一道题错了几次」。
 

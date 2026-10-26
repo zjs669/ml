@@ -5,7 +5,7 @@
         --file data/bench/mingli_bench/cases.jsonl --limit 50
 
 产物：
-- `docs/模型评测-题库.md`：覆盖面、准确率、延迟分位、按术数拆分、失败样例；
+- `docs/模型评测.md`（第二部分·题库）：覆盖面、准确率、延迟分位、按术数拆分、失败样例；
 - `backend/data/bench/attempts.jsonl`：逐题记录，供 `distill_skills.py` 聚类蒸馏。
 
 注意：
@@ -39,7 +39,8 @@ from scripts.bench.datasets import BenchCase, append_jsonl, load_cases, write_js
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 REPO_ROOT = BACKEND_DIR.parent
 DEFAULT_ATTEMPTS = BACKEND_DIR / "data" / "bench" / "attempts.jsonl"
-DEFAULT_REPORT = REPO_ROOT / "docs" / "模型评测-题库.md"
+# 2026-10 重构：三份评测文档已合并为 docs/模型评测.md，脚本只覆盖「题库」这一部分
+DEFAULT_REPORT = REPO_ROOT / "docs" / "模型评测.md"
 
 SYSTEM = (
     "你是命理题库的答题器。第一行必须只包含一个 JSON 对象，"

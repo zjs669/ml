@@ -36,18 +36,107 @@ from app.services.export import build_export_text
 router = APIRouter(tags=["charts"])
 
 
+#: 各域的列表摘要取哪个字段。顺序即优先级，取到第一个非空即停。
+#: 为什么不用「按 domain 写 if/elif」：新增域时要改这里，容易漏；
+#: 用「字段候选表」后，新域只要命盘里有一个候选字段就自动有摘要。
+SUMMARY_CANDIDATES: tuple[tuple[str, ...], ...] = (
+    ("pillars",),          # 四柱系
+    ("lunar_date",),       # 黄历 / 六爻 / 大六壬
+    ("original",),         # 梅花 / 六爻
+    ("result_palace",),    # 小六壬
+    ("spread",),           # 塔罗
+    ("primary",),          # 太乙
+    ("month_general",),    # 大六壬
+    ("planets",),          # 占星
+    ("layers",),           # 紫微运限
+    ("answer",),           # 紫微飞星
+    ("summary",),          # 合盘
+    ("code",),             # 性格问卷
+    ("keywords",),         # 解梦
+)
+
+
 def _pillars_text(chart_json: dict) -> str:
-    facts = chart_json.get("chart_facts", {})
-    pillars = facts.get("pillars", {})
-    if pillars:
-        return " ".join(
-            pillars[key]["text"] for key in ("year", "month", "day", "hour") if key in pillars
+    """列表页的一行摘要。
+
+    这里必须对**所有域**安全：早期实现假定 `chart_facts.pillars` 一定是
+    `{year: {text, stem, ...}}` 的四柱结构，但大六壬的 `pillars` 是
+    `{"year": "丙午"}` 这样的字符串字典 —— 列表页直接 500。
+    现在按「字段候选表」逐项探测，并且对每种形状都做类型判断，不硬转。
+    """
+    facts = chart_json.get("chart_facts", {}) or {}
+
+    # 四柱系：结构正确才渲染
+    pillars = facts.get("pillars")
+    if isinstance(pillars, dict):
+        parts = [
+            pillars[key]["text"]
+            for key in ("year", "month", "day", "hour")
+            if isinstance(pillars.get(key), dict) and pillars[key].get("text")
+        ]
+        if parts:
+            return " ".join(parts)
+
+    def pick(block: Any, *keys: str) -> str | None:
+        if not isinstance(block, dict):
+            return None
+        for key in keys:
+            value = block.get(key)
+            if isinstance(value, str) and value:
+                return value
+        return None
+
+    # 逐类探测：每类都做类型判断，拿不到就继续下一类
+    candidates: list[str | None] = [
+        pick(facts.get("lunar_date"), "text"),
+        # 紫微：五行局是这一盘最能一眼区分的信息，排在宫位之前
+        pick(facts.get("five_element_bureau"), "name"),
+        pick(facts.get("life_palace"), "text"),
+        pick(facts.get("original"), "name"),
+        pick(facts.get("result_palace"), "name"),
+        pick(facts.get("spread"), "name"),
+        pick(facts.get("primary"), "taiyi_name"),
+        pick(facts.get("month_general"), "name"),
+        pick(facts.get("day_pillar"), "ganzhi"),
+    ]
+    # 占星：日月星座
+    planets = facts.get("planets")
+    if isinstance(planets, dict):
+        sun = pick(planets.get("sun"), "sign")
+        moon = pick(planets.get("moon"), "sign")
+        if sun and moon:
+            candidates.append(f"日{sun} 月{moon}")
+    # 紫微运限：六层落宫
+    layers = facts.get("layers")
+    if isinstance(layers, list) and layers:
+        joined = " ".join(
+            f"{item['layer']}{item.get('palace') or '—'}"
+            for item in layers
+            if isinstance(item, dict) and item.get("layer")
         )
-    # 非四柱术数：用术数自己的摘要字段，列表页不至于空着
-    lunar = (facts.get("lunar_date") or {}).get("text")
-    bureau = (facts.get("five_element_bureau") or {}).get("name")
-    hexagram = (facts.get("original") or {}).get("name")
-    return " ".join(part for part in (lunar, bureau, hexagram) if part)
+        candidates.append(joined or None)
+    # 紫微飞星
+    answer = facts.get("answer")
+    if isinstance(answer, dict):
+        candidates.append(pick(answer, "query_type"))
+    # 合盘
+    summary = facts.get("summary")
+    if isinstance(summary, dict):
+        cross = summary.get("cross_count")
+        if isinstance(cross, int):
+            candidates.append(f"跨盘{cross}条 盘内{summary.get('internal_count', 0)}条")
+    # 性格问卷
+    code = facts.get("code")
+    if isinstance(code, str) and code:
+        candidates.append(code)
+    # 解梦
+    keywords = facts.get("keywords")
+    if isinstance(keywords, list):
+        names = [item["keyword"] for item in keywords if isinstance(item, dict) and item.get("keyword")]
+        if names:
+            candidates.append("意象：" + "、".join(names[:6]))
+
+    return " ".join(part for part in candidates if part)
 
 
 def _to_out(record: ChartRecord) -> ChartOut:

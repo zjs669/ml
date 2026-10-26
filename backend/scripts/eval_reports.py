@@ -1,7 +1,7 @@
 """真实模型报告评测。
 
     python -m scripts.eval_reports --cases 10
-    python -m scripts.eval_reports --cases 24 --depth brief --out ../docs/模型评测-报告管线.md
+    python -m scripts.eval_reports --cases 24 --depth brief --out ../docs/模型评测.md
 
 跑基准命例 → 保存命盘 → 生成报告，统计四项门槛：
 schema 通过率 ≥95%、引用合法率 100%、降级率 ≤5%、P50/P95 延迟与 token 成本。
@@ -31,7 +31,8 @@ from app.repositories import chart_repo
 from app.schemas.charts import CalculateIn
 
 DEFAULT_CASES = Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "bazi_cases.json"
-DEFAULT_OUT = Path(__file__).resolve().parents[2] / "docs" / "模型评测-报告管线.md"
+# 2026-10 重构：三份评测文档已合并为 docs/模型评测.md
+DEFAULT_OUT = Path(__file__).resolve().parents[2] / "docs" / "模型评测.md"
 
 PANEL = "=" * 60
 
