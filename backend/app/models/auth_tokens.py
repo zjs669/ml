@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Index, String
+from sqlalchemy import BigInteger, DateTime, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import utcnow
@@ -57,4 +57,39 @@ class RefreshToken(Base):
     used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     user_agent: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utcnow)
+
+
+class EmailVerificationCode(Base):
+    """邮箱验证码（注册 / 找回密码共用）。
+
+    为什么用验证码而不是只有重置链接：
+    链接在手机与电脑之间转移不方便，而验证码可以手输。两者并存 ——
+    验证码用于「本人在某个设备上操作」，链接用于「换设备继续」。
+
+    安全约定：
+    - 库里只存 `sha256(邮箱 + 验证码)`，明文只出现在邮件里；
+    - 6 位数字，10 分钟过期（`verification_code_ttl_minutes`）；
+    - 同一邮箱同一用途只保留最近 N 条，用完即标记 `used_at`；
+    - 连续输错达到阈值即作废该码（`attempts` 计数），防止暴力穷举。
+    """
+
+    __tablename__ = "email_verification_codes"
+    __table_args__ = (
+        Index("idx_code_email_purpose", "email", "purpose", "created_at"),
+        Index("idx_code_expires", "expires_at"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    #: 目标邮箱（小写）。不建外键：注册场景下用户还不存在
+    email: Mapped[str] = mapped_column(String(190), nullable=False)
+    #: reset_password / register / change_email
+    purpose: Mapped[str] = mapped_column(String(32), nullable=False, default="reset_password")
+    #: sha256(email + ":" + code)，明文只在邮件里出现一次
+    code_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    #: 已输错次数；达到上限即作废，不等待自然过期
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    requested_ip: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utcnow)

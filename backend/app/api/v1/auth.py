@@ -1,7 +1,7 @@
 """认证接口：注册 / 登录 / 刷新 / 登出 / 忘记密码 / 会话管理。
 
-安全约定（详见 docs/查漏补缺与安全加固.md）：
-- 登录失败既受 IP 限流，也受**按账号**的失败锁定（`core/login_guard.py`）；
+安全约定（详见 docs/archive/查漏补缺与安全加固.md）：
+- 登录失败既受 IP 限流，也受**按账号**的失败锁定（`core/throttle.py`）；
 - 登录成功时若 Argon2id 参数已升级，自动 rehash 写回，老密码无需用户干预；
 - refresh 走**服务端轮换**：每枚 refresh 落一行 `refresh_tokens`，用过即废，
   重放同一 jti 视为被盗，整族作废并要求重新登录；
@@ -17,11 +17,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
-from app.core import login_guard, mailer
+from app.core import mailer, throttle
 from app.core.config import settings
 from app.core.db import get_session, utcnow
 from app.core.errors import AppError, Conflict, Unauthorized
-from app.core.ratelimit import client_key, hit
+from app.core.throttle import client_key, hit
 from app.core.security import (
     access_ttl_seconds,
     decode_token,
@@ -33,10 +33,15 @@ from app.core.security import (
     refresh_ttl_seconds,
     verify_password,
 )
-from app.models.billing import AuditLog
-from app.models.user import User
-from app.repositories import auth_repo, user_repo
+from app.models import AuditLog
+from app.models import User
+from app.repositories import user_repo
 from app.schemas.auth import (
+    CheckCodeIn,
+    CheckCodeOut,
+    SendCodeIn,
+    SendCodeOut,
+    VerifyCodeIn,
     ForgotPasswordIn,
     ForgotPasswordOut,
     LoginIn,
@@ -89,7 +94,7 @@ def _issue(
     否则重放检测只能废掉旧的一枚，新的一枚照旧能用。
     """
     tokens = issue_tokens(user.id, user.token_version, family_id=family_id)
-    auth_repo.create_refresh_token(
+    user_repo.create_refresh_token(
         session,
         jti=tokens.refresh_jti,
         user_id=user.id,
@@ -157,17 +162,17 @@ def login(
 ) -> TokenOut:
     hit(client_key(request, "login"), limit=10, window_seconds=600)
     # 先看账号是否还在锁定期，避免「密码对了也先算一次失败」
-    login_guard.check_locked(payload.email)
+    throttle.check_locked(payload.email)
 
     user = user_repo.get_by_email(session, payload.email)
     if user is None or not verify_password(payload.password, user.password_hash):
         # 不区分"用户不存在"与"密码错误"，避免账号枚举；但失败次数照记
-        login_guard.note_failure(payload.email)
+        throttle.note_failure(payload.email)
         raise Unauthorized("邮箱或密码不正确")
     if user.status != "active" or user.deleted_at is not None:
         raise Unauthorized("账号不可用，请联系支持")
 
-    login_guard.reset(payload.email)
+    throttle.unlock(payload.email)
     # 参数升级后自动 rehash：用户无感，库里也不会长期留着旧强度哈希
     if user.password_hash and needs_rehash(user.password_hash):
         user.password_hash = hash_password(payload.password)
@@ -187,7 +192,7 @@ def refresh(
         raise Unauthorized("登录已过期，请重新登录")
     payload = decode_token(token, "refresh")
     jti = str(payload.get("jti") or "")
-    row = auth_repo.get_refresh_token(session, jti) if jti else None
+    row = user_repo.get_refresh_token(session, jti) if jti else None
     if row is None:
         # 旧版本签发（无账本记录）或伪造：一律要求重新登录
         raise Unauthorized("登录状态已失效，请重新登录")
@@ -195,7 +200,7 @@ def refresh(
         raise Unauthorized("登录状态已失效，请重新登录")
     if row.used_at is not None:
         # 重放：同一枚 refresh 被用了第二次，说明可能被窃取 → 整族作废
-        auth_repo.revoke_refresh_family(session, row.family_id)
+        user_repo.revoke_refresh_family(session, row.family_id)
         _audit(session, "auth.refresh_replay", user_id=row.user_id, detail={"family_id": row.family_id})
         session.commit()
         raise Unauthorized("登录状态异常，已注销全部会话，请重新登录")
@@ -206,7 +211,7 @@ def refresh(
     if user is None or int(payload.get("ver", -1)) != user.token_version:
         raise Unauthorized("登录状态已失效，请重新登录")
 
-    auth_repo.mark_refresh_used(session, row)
+    user_repo.mark_refresh_used(session, row)
     return _issue(response, user, session, request, family_id=row.family_id)
 
 
@@ -218,7 +223,7 @@ def logout(
 ) -> Response:
     # token_version +1 → 所有已签发的 access/refresh 立刻失效；账本同步作废
     user_repo.bump_token_version(session, user)
-    auth_repo.revoke_all_refresh_tokens(session, user.id)
+    user_repo.revoke_all_refresh_tokens(session, user.id)
     session.commit()
     response.delete_cookie(settings.refresh_cookie_name, path=REFRESH_COOKIE_PATH)
     response.status_code = 204
@@ -235,7 +240,7 @@ def sessions(
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ) -> SessionOut:
-    return SessionOut(active_sessions=auth_repo.count_active_sessions(session, user.id))
+    return SessionOut(active_sessions=user_repo.count_active_sessions(session, user.id))
 
 
 @router.delete("/sessions", response_model=SessionOut)
@@ -245,7 +250,7 @@ def revoke_sessions(
     session: Session = Depends(get_session),
 ) -> SessionOut:
     """登出全部设备：作废 refresh 账本并让 token_version 前进一位。"""
-    auth_repo.revoke_all_refresh_tokens(session, user.id)
+    user_repo.revoke_all_refresh_tokens(session, user.id)
     user_repo.bump_token_version(session, user)
     session.commit()
     response.delete_cookie(settings.refresh_cookie_name, path=REFRESH_COOKIE_PATH)
@@ -274,13 +279,13 @@ def forgot_password(
 
     if user is not None and user.status == "active" and user.deleted_at is None:
         # 只留最近 N 枚，避免「反复申请」把旧链接长期留在库里
-        for stale in auth_repo.list_active_reset_tokens(session, user.id)[
+        for stale in user_repo.list_active_reset_tokens(session, user.id)[
             max(settings.password_reset_max_active - 1, 0) :
         ]:
-            auth_repo.consume_reset_token(session, stale)
+            user_repo.consume_reset_token(session, stale)
 
         raw_token, token_hash = new_reset_token()
-        auth_repo.create_reset_token(
+        user_repo.create_reset_token(
             session,
             user_id=user.id,
             token_hash=token_hash,
@@ -328,7 +333,7 @@ def reset_password(
         "重置链接无效或已过期，请重新申请",
         status_code=400,
     )
-    row = auth_repo.get_reset_token(session, hash_token(payload.token))
+    row = user_repo.get_reset_token(session, hash_token(payload.token))
     if row is None or row.used_at is not None or row.expires_at <= utcnow():
         raise invalid
 
@@ -341,11 +346,168 @@ def reset_password(
     user.password_hash = hash_password(payload.password)
     user.token_version += 1  # 所有已签发的令牌立刻失效
     session.add(user)
-    auth_repo.consume_reset_token(session, row)
-    auth_repo.purge_other_reset_tokens(session, user_id=user.id, keep_id=row.id)
-    auth_repo.revoke_all_refresh_tokens(session, user.id)
-    login_guard.reset(user.email or "")
+    user_repo.consume_reset_token(session, row)
+    user_repo.purge_other_reset_tokens(session, user_id=user.id, keep_id=row.id)
+    user_repo.revoke_all_refresh_tokens(session, user.id)
+    throttle.unlock(user.email or "")
     _audit(session, "auth.password_reset", user_id=user.id, detail={"ip": _client_ip(request)})
     session.commit()
 
     return ResetPasswordOut(message="密码已更新，请用新密码重新登录。")
+
+
+# ---------------------------------------------------------------- 验证码
+
+
+def _code_hash(email: str, code: str) -> str:
+    """验证码的存储形式：sha256(email + ":" + code)。
+
+    加邮箱是为了让「同一串码发给不同人」不共享哈希 —— 否则一次泄露
+    可能让别人试出自己那份的码。
+    """
+    return hash_token(f"{email.strip().lower()}:{code}")
+
+
+@router.post("/code/send", response_model=SendCodeOut)
+def send_code(
+    payload: SendCodeIn,
+    request: Request,
+    session: Session = Depends(get_session),
+) -> SendCodeOut:
+    """发送邮箱验证码。
+
+    响应与「邮箱是否存在」完全无关（防账号枚举）：
+    未注册的邮箱同样返回 200 与相同的 `expires_in_minutes`，只是不发信。
+    开发环境会额外返回 `debug_code`，方便本机联调。
+    """
+    hit(client_key(request, "send_code"), limit=5, window_seconds=600)
+    hit(f"send_code:email:{payload.email}", limit=3, window_seconds=3600)
+
+    ttl = settings.verification_code_ttl_minutes
+    debug_code: str | None = None
+    user = user_repo.get_by_email(session, payload.email)
+    is_active = user is not None and user.status == "active" and user.deleted_at is None
+
+    # 找回密码只对已注册且可用的账号发码；注册验证则不看用户是否存在
+    should_send = is_active if payload.purpose == "reset_password" else True
+
+    if should_send:
+        code = mailer.generate_verification_code()
+        # 只保留最近 N 条，避免「反复点击发送」把旧码长期留在库里
+        rows = user_repo.list_active_verification_codes(
+            session, email=payload.email, purpose=payload.purpose
+        )
+        for stale in rows[: max(len(rows) - settings.verification_code_max_active + 1, 0)]:
+            user_repo.consume_verification_code(session, stale)
+
+        user_repo.create_verification_code(
+            session,
+            email=payload.email,
+            purpose=payload.purpose,
+            code_hash=_code_hash(payload.email, code),
+            expires_at=utcnow() + timedelta(minutes=ttl),
+            requested_ip=_client_ip(request),
+        )
+        try:
+            mailer.send_verification_code(to=payload.email, code=code, ttl_minutes=ttl)
+        except mailer.MailDeliveryError:
+            # 投递失败不暴露给调用方（否则成了「这个邮箱存在」的侧信道），
+            # 但要在审计里留痕，便于运维排查
+            _audit(session, "auth.verification_mail_failed", user_id=user.id if user else None)
+        if user is not None:
+            _audit(
+                session,
+                "auth.verification_sent",
+                user_id=user.id,
+                detail={"purpose": payload.purpose, "ttl_minutes": ttl},
+            )
+        if settings.app_env == "development" and settings.mail_mode == "console":
+            debug_code = code
+
+    session.commit()
+    return SendCodeOut(
+        message=f"如果该邮箱可用于验证，验证码已发送，{ttl} 分钟内有效。",
+        expires_in_minutes=ttl,
+        debug_code=debug_code,
+    )
+
+
+@router.post("/code/check", response_model=CheckCodeOut)
+def check_code(
+    payload: CheckCodeIn,
+    request: Request,
+    session: Session = Depends(get_session),
+) -> CheckCodeOut:
+    """只校验验证码，不改任何状态（注册前验证邮箱用）。"""
+    hit(client_key(request, "check_code"), limit=10, window_seconds=600)
+
+    now = utcnow()
+    row = user_repo.find_verification_code(
+        session,
+        email=payload.email,
+        purpose=payload.purpose,
+        code_hash=_code_hash(payload.email, payload.code),
+        now=now,
+    )
+    if row is None:
+        session.commit()
+        return CheckCodeOut(valid=False, message="验证码不正确或已过期")
+
+    attempts = user_repo.bump_verification_attempts(session, row)
+    if attempts > settings.verification_code_max_attempts:
+        user_repo.consume_verification_code(session, row)
+        session.commit()
+        return CheckCodeOut(valid=False, message="验证码错误次数过多，请重新获取")
+
+    user_repo.consume_verification_code(session, row)
+    session.commit()
+    return CheckCodeOut(valid=True, message="验证通过")
+
+
+@router.post("/password/reset-by-code", response_model=ResetPasswordOut)
+def reset_password_by_code(
+    payload: VerifyCodeIn,
+    request: Request,
+    session: Session = Depends(get_session),
+) -> ResetPasswordOut:
+    """用验证码直接重置密码（不需要先换 token）。
+
+    验证码就是凭证：一次请求完成「校验 + 改密 + 踢下线」，
+    少一个中间态就少一处「token 被别人拿到」的风险。
+    """
+    hit(client_key(request, "reset_by_code"), limit=10, window_seconds=600)
+    hit(f"reset_by_code:email:{payload.email}", limit=5, window_seconds=600)
+
+    now = utcnow()
+    row = user_repo.find_verification_code(
+        session,
+        email=payload.email,
+        purpose="reset_password",
+        code_hash=_code_hash(payload.email, payload.code),
+        now=now,
+    )
+    if row is None:
+        session.commit()
+        # 与「邮箱不存在」返回同一句，避免枚举
+        raise Unauthorized("验证码不正确或已过期")
+
+    attempts = user_repo.bump_verification_attempts(session, row)
+    if attempts > settings.verification_code_max_attempts:
+        user_repo.consume_verification_code(session, row)
+        session.commit()
+        raise Unauthorized("验证码错误次数过多，请重新获取")
+
+    user = user_repo.get_by_email(session, payload.email)
+    if user is None or user.status != "active" or user.deleted_at is not None:
+        user_repo.consume_verification_code(session, row)
+        session.commit()
+        raise Unauthorized("账号不可用或已注销")
+
+    user.password_hash = hash_password(payload.password)
+    user_repo.bump_token_version(session, user)
+    user_repo.revoke_all_refresh_tokens(session, user.id)
+    user_repo.consume_verification_code(session, row)
+    throttle.unlock(user.email or "")
+    _audit(session, "auth.password_reset_by_code", user_id=user.id, detail={"ip": _client_ip(request)})
+    session.commit()
+    return ResetPasswordOut(message="密码已重置，请用新密码登录", signed_out_all=True)

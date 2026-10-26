@@ -126,6 +126,12 @@ class Settings(BaseSettings):
     smtp_username: str = ""
     smtp_password: str = ""
     smtp_use_ssl: bool = True
+    #: 验证码有效期（分钟）。参考实现用 10 分钟，保持一致
+    verification_code_ttl_minutes: int = 10
+    #: 同一邮箱同一用途最多保留几条有效码（旧的自动作废）
+    verification_code_max_active: int = 3
+    #: 单个验证码允许输错次数，超过即作废（防暴力穷举）
+    verification_code_max_attempts: int = 5
 
     # 算法
     bazi_algorithm_version: str = "bazi-engine-0.1.0"

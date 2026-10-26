@@ -133,3 +133,99 @@ class ResetPasswordOut(BaseModel):
 
 class SessionOut(BaseModel):
     active_sessions: int
+
+
+# ------------------------------------------------------------ 验证码流程
+
+
+class SendCodeIn(BaseModel):
+    """发送验证码：邮箱 + 用途。"""
+
+    email: str = Field(max_length=190)
+    #: reset_password = 找回密码；register = 注册前验证邮箱
+    purpose: Literal["reset_password", "register"] = "reset_password"
+
+    @field_validator("email")
+    @classmethod
+    def _normalize(cls, value: str) -> str:
+        value = value.strip().lower()
+        if not EMAIL_RE.match(value):
+            raise ValueError("邮箱格式不正确")
+        return value
+
+    model_config = {"extra": "forbid"}
+
+
+class SendCodeOut(BaseModel):
+    """无论邮箱是否存在，返回内容完全一致（防账号枚举）。"""
+
+    message: str
+    expires_in_minutes: int
+    #: 仅在 APP_ENV=development 且 MAIL_MODE=console 时返回，生产恒为 None
+    debug_code: str | None = None
+
+
+class VerifyCodeIn(BaseModel):
+    """校验验证码并直接改密码（找回密码场景）。
+
+    不需要先换 token 再改密码：验证码本身就是凭证，一次请求完成，
+    少一个中间态就少一处「token 被别人拿到」的风险。
+    """
+
+    email: str = Field(max_length=190)
+    code: str = Field(min_length=6, max_length=6)
+    password: str = Field(min_length=8, max_length=128)
+
+    @field_validator("email")
+    @classmethod
+    def _normalize_email(cls, value: str) -> str:
+        value = value.strip().lower()
+        if not EMAIL_RE.match(value):
+            raise ValueError("邮箱格式不正确")
+        return value
+
+    @field_validator("code")
+    @classmethod
+    def _digits(cls, value: str) -> str:
+        value = value.strip()
+        if not value.isdigit():
+            raise ValueError("验证码只能是 6 位数字")
+        return value
+
+    @field_validator("password")
+    @classmethod
+    def _password_strength(cls, value: str) -> str:
+        return validate_password_strength(value)
+
+    model_config = {"extra": "forbid"}
+
+
+class CheckCodeIn(BaseModel):
+    """只校验验证码，不改密码（注册前验证邮箱场景）。"""
+
+    email: str = Field(max_length=190)
+    code: str = Field(min_length=6, max_length=6)
+    purpose: Literal["reset_password", "register"] = "register"
+
+    @field_validator("email")
+    @classmethod
+    def _normalize_email(cls, value: str) -> str:
+        value = value.strip().lower()
+        if not EMAIL_RE.match(value):
+            raise ValueError("邮箱格式不正确")
+        return value
+
+    @field_validator("code")
+    @classmethod
+    def _digits(cls, value: str) -> str:
+        value = value.strip()
+        if not value.isdigit():
+            raise ValueError("验证码只能是 6 位数字")
+        return value
+
+    model_config = {"extra": "forbid"}
+
+
+class CheckCodeOut(BaseModel):
+    valid: bool
+    message: str

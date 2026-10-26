@@ -1,6 +1,6 @@
 """集中导出所有 ORM 模型，Alembic autogenerate 依赖此模块的导入副作用。"""
 
-from app.models.auth_tokens import PasswordResetToken, RefreshToken
+from app.models.auth_tokens import EmailVerificationCode, PasswordResetToken, RefreshToken
 from app.models.base import Base
 from app.models.billing import AuditLog, Feedback, Order, PaymentEvent, UsageLedger
 from app.models.chart import ChartMedia, ChartNote, ChartRecord, ShareLink
@@ -14,6 +14,7 @@ __all__ = [
     "User",
     "UserConsent",
     "PasswordResetToken",
+    "EmailVerificationCode",
     "RefreshToken",
     "ChartRecord",
     "ChartNote",
