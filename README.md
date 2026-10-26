@@ -97,82 +97,90 @@ docs/                   活文档：口径说明/架构与验收/数据库/面�
 
 依赖方向硬约束：`api → domains → repositories/models → core`；`domains/bazi` 不 import `llm`/`billing`；`owner_user_id` 过滤只在 `repositories/` 做。以上由 `tests/test_architecture.py` 守卫（含纯计算域禁触数据库/模型、前端 api 不反向依赖 UI），具体规则与例外见 [docs/架构与验收.md](docs/架构与验收.md)。
 
-## 3. 本机跑起来
-
-### 3.1 前置
-
-- Python 3.11（本项目实测 3.11.17）
-- Node ≥ 20.19（实测 v25）
-- MySQL 8（本项目开发实例是 Docker 容器 `xuanshu-mysql`，对外 `127.0.0.1:3307`；
-  系统里 3306 上的 MySQL8 服务是另一个实例，本项目不连它。见 [docs/数据库.md](docs/数据库.md)）
-
-### 3.2 数据库
-
-```sql
-CREATE DATABASE xuanshu DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-CREATE DATABASE xuanshu_test DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-CREATE USER 'xuanshu_app'@'localhost' IDENTIFIED BY '<强口令>';
-GRANT ALL PRIVILEGES ON xuanshu.* TO 'xuanshu_app'@'localhost';
-GRANT ALL PRIVILEGES ON xuanshu_test.* TO 'xuanshu_app'@'localhost';
-SET GLOBAL ngram_token_size = 2;
-```
-
-> `ngram_token_size` 必须为 2，否则中文全文检索命中率会崩。
-
-### 3.3 后端
+## 3. 启动
 
 ```bash
+# 1. 数据库（容器要先起来）
+docker start xuanshu-mysql
+
+# 2. 后端
 cd backend
-cp .env.example .env          # 改 DATABASE_URL / SECRET_KEY，按需填 LLM_*
+python -m uvicorn app.main:app --reload --port 8000
+
+# 3. 前端（另开一个终端）
+cd frontend
+npm run dev
+```
+
+打开 <http://127.0.0.1:5173>。后端在 8000，接口文档 <http://127.0.0.1:8000/docs>。
+
+也可以一条命令起两个：
+
+```bash
+python start.py            # 后端 + 前端
+python start.py backend    # 只启后端
+python start.py frontend   # 只启前端
+```
+
+### 第一次装
+
+```bash
+docker start xuanshu-mysql          # 库和账号见 docs/数据库.md
+
+cd backend
+cp .env.example .env                # 改 DATABASE_URL（端口 3307）、SECRET_KEY
 pip install -e ".[dev]"
 alembic upgrade head
-python -m app.domains.knowledge.ingest --approve   # 灌入 bazi 第一批片段（开发用一次性审核）
-# 其余三术数各灌一次（相对路径以仓库根为基准）：
-python -m app.domains.knowledge.ingest --domain ziwei  --dir docs/知识源/ziwei  --approve
-python -m app.domains.knowledge.ingest --domain liuyao --dir docs/知识源/liuyao --approve
-python -m app.domains.knowledge.ingest --domain qimen  --dir docs/知识源/qimen  --approve
-uvicorn app.main:app --reload --port 8000
-```
 
-> 服务只读 `backend/.env`；`.env.example` 只是模板，不参与加载（历史上曾被模板里的占位值覆盖真实配置）。
-
-- 健康检查：`GET http://127.0.0.1:8000/healthz`
-- 接口文档：`http://127.0.0.1:8000/docs`
-- Windows 控制台打印中文需 `set PYTHONIOENCODING=utf-8`（PowerShell：`$env:PYTHONIOENCODING='utf-8'`）
-
-### 3.4 前端
-
-```bash
-cd frontend
+cd ../frontend
 cp .env.example .env
 npm install
-npm run dev        # http://localhost:5173，/api 代理到 127.0.0.1:8000
 ```
 
-生产构建：`npm run build`（内含 `vue-tsc --noEmit`，要求零错误）。
-
-渲染冒烟（SSR 真渲染，验「拿到真实数据不崩、关键字段确实出现」）：
-
-```bash
-cd backend && PYTHONPATH=. python -m scripts.dump_board_facts   # 导出样本到 backend/var/
-cd frontend && npm run check:routes    # 12 个路由：验每页不是空白、同构域配置链没断
-cd frontend && npm run check:boards    # 5 个专属盘面：almanac/tarot/daliuren/astrology/meihua
-cd frontend && npm run check           # 上面三项 + typecheck 一起跑
-```
-
-> 冒烟脚本必须用 `vite.smoke.config.ts`（`npm run` 里已带）：默认配置会把 vue 预打包到
-> `node_modules/.vite/deps`，与源码 import 的 vue 形成双实例，`renderSlot` 会抛
-> `Cannot read properties of null (reading 'ce')`。该配置关掉 `optimizeDeps` 即可。
-
-### 3.5 一条命令验证前后端契约
+灌知识库（不灌也能排盘，只是报告没有可引用的原文）：
 
 ```bash
 cd backend
-python -m scripts.smoke_e2e            # 经 vite 代理跑完整链路
-SMOKE_BASE=http://127.0.0.1:8000/api/v1 python -m scripts.smoke_e2e   # 直连后端
+python -m app.domains.knowledge.ingest --approve
+python -m app.domains.knowledge.ingest --domain ziwei --dir docs/知识源/ziwei --approve
 ```
 
-脚本依次走：健康检查 → 套餐 → 注册 → **15 个域各排一次盘** → 15 个域各存一次盘（服务端重算，客户端盘面一律不采信）→ 无额度时详版被 402 拦截 → 下单 + Mock 回调 → 15 个域各生成简版报告并逐次核对账本（完成态扣 1、降级原额退回、有付费额度时不消耗免费次数）→ 幂等重放 → 详版成功 → 分享 → 导出 → 笔记 → 知识检索。任一术数的入参字段名或响应结构改坏，这里会先红。
+### `backend/.env` 里必须改的两项
+
+| 变量 | 说明 |
+|---|---|
+| `DATABASE_URL` | 端口是 **3307** 不是 3306（系统里 3306 是另一个 MySQL 实例，本项目不连它） |
+| `SECRET_KEY` | ≥32 字符，生产环境弱值会直接启动失败 |
+
+发邮件、调模型相关：
+
+| 变量 | 说明 |
+|---|---|
+| `MAIL_MODE` | `console` 不真发信（写 `backend/var/mail_outbox.log`）；`smtp` 真发 |
+| `SMTP_PASSWORD` | QQ 邮箱填**授权码**，不是登录密码 |
+| `LLM_MODE` | `mock` 不调模型；`openai_compatible` 调真实模型 |
+| `RATELIMIT_ENABLED` | 本地反复跑 `smoke_e2e` 可设 `false`，生产必须 `true` |
+
+### 验证
+
+```bash
+curl http://127.0.0.1:8000/healthz        # {"status":"ok","database":"ok"}
+curl http://127.0.0.1:8000/api/v1/meta/domains   # 16 个域
+```
+
+一条命令跑通全链路（注册→15 域排盘→报告→账本）：
+
+```bash
+cd backend
+python -m scripts.smoke_e2e
+```
+
+前端渲染冒烟：
+
+```bash
+cd backend && PYTHONPATH=. python -m scripts.dump_board_facts
+cd frontend && npm run check     # typecheck + 12 路由 + 5 盘面
+```
 
 ## 4. 测试
 
