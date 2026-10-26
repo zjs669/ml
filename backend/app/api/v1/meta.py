@@ -59,6 +59,30 @@ def conventions() -> dict:
     }
 
 
+@router.get("/domains")
+def domains() -> dict:
+    """已接入的术数清单。前端工具页与路由表据此渲染，不在 Vue 里硬编码。
+
+    只暴露「有哪几个域、叫什么、属于哪类、支持哪些流派」，
+    不暴露引擎实现细节，也不返回任何用户数据。
+    """
+    from app.domains.registry import ENGINES
+
+    return {
+        "domains": [
+            {
+                "domain": spec.domain,
+                "label": spec.label,
+                "kind": spec.kind,
+                "schools": list(spec.schools),
+                "requires_media": spec.requires_media,
+            }
+            for spec in ENGINES.values()
+        ],
+        "count": len(ENGINES),
+    }
+
+
 @router.get("/about")
 def about(session: Session = Depends(get_session)) -> dict:
     rule_version, rules = load_rules()

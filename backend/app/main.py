@@ -14,7 +14,19 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
-from app.api.v1 import auth, billing, charts, feedback, knowledge, me, meta, reports, reverse, vision
+from app.api.v1 import (
+    auth,
+    billing,
+    charts,
+    feedback,
+    knowledge,
+    mbti,
+    me,
+    meta,
+    reports,
+    reverse,
+    vision,
+)
 from app.core.config import settings
 from app.core.db import engine
 from app.core.errors import install_error_handlers
@@ -64,7 +76,7 @@ app.add_middleware(
 
 install_error_handlers(app)
 
-for module in (auth, charts, reports, knowledge, billing, me, feedback, meta, reverse, vision):
+for module in (auth, charts, reports, knowledge, billing, me, feedback, meta, reverse, vision, mbti):
     app.include_router(module.router, prefix=settings.api_prefix)
 app.include_router(charts.share_router, prefix=settings.api_prefix)
 

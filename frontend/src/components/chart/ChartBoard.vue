@@ -2,6 +2,7 @@
 import { computed, type Component } from 'vue'
 
 import BaziBoard from './BaziBoard.vue'
+import GenericBoard from './GenericBoard.vue'
 import ZiweiBoard from './ZiweiBoard.vue'
 import LiuyaoBoard from './LiuyaoBoard.vue'
 import QimenBoard from './QimenBoard.vue'
@@ -20,6 +21,7 @@ const props = defineProps<{
   showRelations?: boolean
 }>()
 
+/** 已有专属可视化的域。新增域先落到 GenericBoard，专属组件就绪后再登记到这里。 */
 const BOARDS: Record<string, Component> = {
   bazi: BaziBoard,
   ziwei: ZiweiBoard,
@@ -27,23 +29,11 @@ const BOARDS: Record<string, Component> = {
   qimen: QimenBoard,
 }
 
-const board = computed<Component | null>(() => BOARDS[props.result.domain] ?? null)
+const board = computed<Component>(() => BOARDS[props.result.domain] ?? GenericBoard)
 </script>
 
 <template>
-  <component :is="board" v-if="board" :result="result" :show-relations="showRelations" />
-  <div v-else class="board-missing">
-    <el-alert
-      type="warning"
-      :closable="false"
-      show-icon
-      :title="`「${result.domain}」的盘面组件尚未接入`"
-      description="计算已完成，但本版本还没有对应的可视化组件，可先参考下方计算提示。"
-    />
-    <ul v-if="result.warnings.length" class="missing-warnings">
-      <li v-for="(item, index) in result.warnings" :key="index">{{ item }}</li>
-    </ul>
-  </div>
+  <component :is="board" :result="result" :show-relations="showRelations" />
 </template>
 
 <style scoped>
