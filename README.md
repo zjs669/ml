@@ -92,7 +92,7 @@ frontend/
   src/router/           routes.ts（纯数据，供冒烟脚本 import）+ index.ts（router 实例与守卫）
   src/styles/
 infra/                  docker-compose.yml、nginx.conf、两个 Dockerfile、backup.sh
-docs/                   docs/README.md 为索引：重构方案/口径/架构/数据库/面相/基准/评测/题库/技能/安全
+docs/                   活文档：口径说明/架构与验收/数据库/面相/基准/题库 + 知识源（运行时数据）
 ```
 
 依赖方向硬约束：`api → domains → repositories/models → core`；`domains/bazi` 不 import `llm`/`billing`；`owner_user_id` 过滤只在 `repositories/` 做。以上由 `tests/test_architecture.py` 守卫（含纯计算域禁触数据库/模型、前端 api 不反向依赖 UI），具体规则与例外见 [docs/架构与验收.md](docs/架构与验收.md)。
@@ -264,7 +264,7 @@ python -m scripts.encrypt_secrets           # 加密并把明文改成 enc:v1:..
 
 ## 7. 账号安全与找回密码
 
-- **密码存储**：Argon2id（`time_cost=3, memory_cost=64MiB, parallelism=2`），每次带随机盐；登录时若参数已升级会自动 rehash。库里不存在明文，也不存在 MD5——`md5/sha` 属快速哈希，碰撞/字典攻击成本远低于 Argon2id（详见 `docs/archive/查漏补缺与安全加固.md` 第 D1 节）。
+- **密码存储**：Argon2id（`time_cost=3, memory_cost=64MiB, parallelism=2`），每次带随机盐；登录时若参数已升级会自动 rehash。库里不存在明文，也不存在 MD5——`md5/sha` 属快速哈希，碰撞/字典攻击成本远低于 Argon2id。
 - **JWT**：HS256 白名单，强制校验 `iss=xuanshu` / `aud=xuanshu-api`；access 15 分钟；refresh 7 天且**服务端轮换**——每枚 refresh 落一行 `refresh_tokens`，用过即废，重放同一 `jti` 视为被盗并作废整条登录链。
 - **登出与改密**：`users.token_version` 前进一位 + 账本全作废，所有设备立即下线；`DELETE /auth/sessions` 等价于「登出所有设备」。
 - **暴力破解**：IP 限流之外还按**账号**计数，连续 5 次失败锁定 15 分钟，之后按轮次翻倍（上限 24 小时）。
@@ -373,7 +373,7 @@ python -m scripts.bench_stats --min-wrong 2          # 只看错 2 次以上的�
 | 题库缺答案 | 评测时因缺题目/选项/答案被跳过的条数（`last_load.json` 记录） |
 
 转正流程：人工复核 `backend/skills/_draft/*.md` → 改 `status: approved` → 合并进 `backend/skills/<domain>/SKILL.md` 或 `cards/`。
-SKILL.md 会在**每次 AI 调用前**注入（全局 + 领域各一份，总预算 4000 字符），详见 [docs/技能与知识源.md](docs/技能与知识源.md)。
+SKILL.md 会在**每次 AI 调用前**注入（全局 + 领域各一份，总预算 4000 字符），详见 [backend/skills/README.md](backend/skills/README.md)。
 
 外部技能包（如 [taibu](https://github.com/hhszzzz/taibu)）通过 `SKILLS_EXTRA_DIRS` 只读挂载：
 评测时加载它的 `interpretation/<体系>.md`，报告/追问默认不加载（外部包含吉凶断语，与本站红线冲突）。

@@ -1,6 +1,6 @@
 """认证接口：注册 / 登录 / 刷新 / 登出 / 忘记密码 / 会话管理。
 
-安全约定（详见 docs/archive/查漏补缺与安全加固.md）：
+安全约定：
 - 登录失败既受 IP 限流，也受**按账号**的失败锁定（`core/throttle.py`）；
 - 登录成功时若 Argon2id 参数已升级，自动 rehash 写回，老密码无需用户干预；
 - refresh 走**服务端轮换**：每枚 refresh 落一行 `refresh_tokens`，用过即废，

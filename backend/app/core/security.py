@@ -1,6 +1,6 @@
 """密码哈希与 JWT 签发/校验。
 
-设计要点（见 docs/archive/查漏补缺与安全加固.md）：
+设计要点：
 - 密码只存 **Argon2id** 哈希，可调参，绝不落明文；登录时若参数变化自动 rehash。
 - access token 短效（默认 15 分钟），只放 sub/typ/ver/iss/aud，不放邮箱等个人信息。
 - refresh token 7 天，用 `users.token_version` 做全局撤销，用 `refresh_tokens.jti`

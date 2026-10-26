@@ -69,7 +69,7 @@ def get_config() -> dict:
             "code": "wechat",
             "label": "微信支付",
             "available": False,
-            "note": "未接入：需商户号、API v3 证书与回调验签，见 docs/archive/查漏补缺与安全加固.md。",
+            "note": "未接入：需商户号、API v3 证书与回调验签。",
         },
         {
             "code": "alipay",

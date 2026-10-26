@@ -40,3 +40,9 @@ taibu/
 # 运行时产物：邮件发信箱、媒体文件、盘面校验样本
 backend/var/
 !backend/var/.gitkeep
+
+# 脚本生成的评测报告（由 bench_eval / bench_stats / distill_round / eval_reports 覆盖写入）
+docs/模型评测.md
+docs/题库复盘.md
+docs/蒸馏记录.md
+docs/模型评测-无技能基线.md
