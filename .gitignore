@@ -46,3 +46,6 @@ docs/模型评测.md
 docs/题库复盘.md
 docs/蒸馏记录.md
 docs/模型评测-无技能基线.md
+
+# npm 在中文路径下的复制残留（会把 %SystemDrive% 当字面量建目录）
+%SystemDrive%/
