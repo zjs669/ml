@@ -204,6 +204,20 @@ const shareLink = computed(() =>
 /** 降级原因取 uncertainties 的第一条（后端已按 reason_kind 分好文案）。 */
 const degradedReason = computed(() => report.value?.report.uncertainties?.[0] || '模型未能给出合规输出。')
 
+/**
+ * 两类降级给不同引导。混在一起时，用户会把「这个问题超出本报告材料」
+ * 误读成「系统坏了」——前者重试一百次也没用，后者重做报告纯属浪费。
+ */
+function degradedTitle(kind?: string): string {
+  return kind === 'MODEL_UNAVAILABLE' ? '模型暂时不可用' : '这个问题超出本报告材料范围'
+}
+
+function degradedGuide(kind?: string): string {
+  return kind === 'MODEL_UNAVAILABLE'
+    ? '模型侧没有返回可用结果（可能未配置、上游失败或当日预算已用尽），稍后重试即可，不需要重做报告。'
+    : '追问只能引用原报告已检索到的片段。这个方向本报告没有材料，请生成一份新报告，让检索重新取片段。'
+}
+
 watch(chartId, () => {
   report.value = null
   followups.value = []
@@ -333,7 +347,8 @@ onMounted(async () => {
             <div class="followup-head">
               <h4>继续追问</h4>
               <span class="followup-hint">
-                追问不扣额度，只能依据这份报告的材料作答（同一报告最多 20 轮）
+                追问仅基于本报告已有内容回答，不重新检索；如需全新问题，请生成新报告。
+                同一报告最多 20 轮，不扣额度。
               </span>
             </div>
 
@@ -355,6 +370,28 @@ onMounted(async () => {
                   <ul v-if="turn.answer.uncertainties.length" class="uncertain">
                     <li v-for="(item, index) in turn.answer.uncertainties" :key="index">{{ item }}</li>
                   </ul>
+                  <el-alert
+                    v-if="turn.status === 'degraded'"
+                    class="degraded-guide"
+                    type="warning"
+                    :closable="false"
+                    show-icon
+                    :title="degradedTitle(turn.answer.reason_kind)"
+                  >
+                    <template #default>
+                      <p class="guide-text">{{ degradedGuide(turn.answer.reason_kind) }}</p>
+                      <el-button
+                        v-if="turn.answer.reason_kind !== 'MODEL_UNAVAILABLE'"
+                        size="small"
+                        type="warning"
+                        plain
+                        @click="generate"
+                      >
+                        重新生成报告
+                      </el-button>
+                      <span v-else class="guide-hint">稍后点上方「生成解读」重试即可。</span>
+                    </template>
+                  </el-alert>
                   <div class="turn-foot">
                     <el-tag v-if="turn.status === 'degraded'" size="small" type="warning" effect="plain">
                       降级
@@ -660,6 +697,19 @@ onMounted(async () => {
   color: #8a5a1c;
 }
 
+.degraded-guide {
+  margin: 8px 0;
+}
+
+.degraded-guide .guide-text {
+  margin: 0 0 8px;
+  line-height: 1.7;
+}
+
+.guide-hint {
+  font-size: 12px;
+  color: var(--xs-text-muted);
+}
 .turn-foot {
   display: flex;
   align-items: baseline;

@@ -34,11 +34,24 @@ EXEMPT: dict[str, str] = {
 
 
 def _registered_boards() -> set[str]:
-    """从 ChartBoard.vue 的 BOARDS 对象里取 domain 列表。"""
+    """从 ChartBoard.vue 的 BOARDS 对象里取 domain 列表。
+
+    支持两种登记写法，因为盘面组件改成了按域异步加载：
+
+        静态：bazi: BaziBoard,
+        异步：bazi: defineAsyncComponent(() => import('./BaziBoard.vue')),
+
+    只认「值里出现 XxxBoard」这一条共同特征，不去解析嵌套括号 ——
+    解析 import() 的括号配对只会让测试比被测代码更脆。
+    """
     text = CHART_BOARD.read_text(encoding="utf-8")
-    match = re.search(r"const BOARDS: Record<string, Component> = \{([^}]*)\}", text)
-    assert match, "ChartBoard.vue 里找不到 BOARDS 定义（结构变了就同步改本测试）"
-    return set(re.findall(r"^\s*(\w+):\s*\w+Board,", match.group(1), re.MULTILINE))
+    start = text.find("const BOARDS")
+    assert start >= 0, "ChartBoard.vue 里找不到 BOARDS 定义（结构变了就同步改本测试）"
+    end = text.find("}", start)
+    assert end > start, "BOARDS 对象没有闭合"
+    block = text[start:end]
+    pairs = re.findall(r"^\s*(\w+):\s*(.+?)$", block, re.MULTILINE)
+    return {key for key, value in pairs if re.search(r"\w+Board\b", value)}
 
 
 def _dump_domains() -> set[str]:

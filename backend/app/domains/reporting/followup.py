@@ -100,8 +100,34 @@ def _build_prompt(
     return body
 
 
-def _degraded(report: AiReport, reason: str) -> dict[str, Any]:
-    """降级回复只复述「原报告里已经过校验的事实」，不生成任何新句子。"""
+#: 降级原因 → 用户可理解的两类。前端据此给不同引导：
+#: OUT_OF_SCOPE 建议「重新生成报告」，MODEL_UNAVAILABLE 建议「稍后重试」。
+#: 这两类混在一起时，用户会把「这个问题超出本报告材料」误读成「系统坏了」。
+REASON_KIND_OUT_OF_SCOPE = "OUT_OF_SCOPE"
+REASON_KIND_MODEL_UNAVAILABLE = "MODEL_UNAVAILABLE"
+
+#: 内部 kind → 对外 reason_kind。
+#: - validation：模型答了但引用越界/事实不符 → 材料不够，重新生成报告更有效
+#: - unconfigured / upstream / budget：模型侧没跑起来 → 重试或稍后再说
+_REASON_KIND_MAP: dict[str, str] = {
+    "validation": REASON_KIND_OUT_OF_SCOPE,
+    "unconfigured": REASON_KIND_MODEL_UNAVAILABLE,
+    "upstream": REASON_KIND_MODEL_UNAVAILABLE,
+    "budget": REASON_KIND_MODEL_UNAVAILABLE,
+}
+
+
+def reason_kind(kind: str) -> str:
+    """把内部失败原因归成两类对外语义。未知值按「模型不可用」处理（保守：不引导用户重做无用功）。"""
+    return _REASON_KIND_MAP.get(kind, REASON_KIND_MODEL_UNAVAILABLE)
+
+
+def _degraded(report: AiReport, reason: str, kind: str) -> dict[str, Any]:
+    """降级回复只复述「原报告里已经过校验的事实」，不生成任何新句子。
+
+    `kind` 会写进 answer_json.reason_kind，前端据此区分「超出材料范围」与
+    「模型暂时不可用」—— 前者引导重新生成报告，后者引导稍后重试。
+    """
     observations = [
         item.get("fact", "") for item in (report.report_json or {}).get("observations", [])
     ]
@@ -111,6 +137,7 @@ def _degraded(report: AiReport, reason: str) -> dict[str, Any]:
         "points": points,
         "citations": [],
         "uncertainties": [reason],
+        "reason_kind": reason_kind(kind),
         "safety_note": SAFETY_NOTE,
     }
 
@@ -238,13 +265,13 @@ def answer(
     budget_exhausted = budget > 0 and llm_repo.count_today(session) >= budget
 
     if budget_exhausted:
-        payload = _degraded(report, "今日模型调用预算已用尽，追问暂不生成。")
+        payload = _degraded(report, "今日模型调用预算已用尽，追问暂不生成。", "budget")
         status = "degraded"
         provider_name, model_name = "fallback", "degraded-template-v1"
         tokens: tuple[int | None, int | None, int | None] = (0, 0, None)
         validation_json: dict[str, Any] = {"ok": False, "fatal_codes": ["daily_budget_exhausted"], "skills_used": []}
     else:
-        response, validation, reason, _kind, skill_ids = _call_with_retry(
+        response, validation, reason, failure_kind, skill_ids = _call_with_retry(
             session=session,
             chart=chart,
             report=report,
@@ -260,7 +287,7 @@ def answer(
             tokens = (response.input_tokens, response.output_tokens, response.latency_ms)
             validation_json = {**validation.to_dict(), "skills_used": skill_ids}
         else:
-            payload = _degraded(report, f"模型回答未通过校验：{reason[:200]}")
+            payload = _degraded(report, f"模型回答未通过校验：{reason[:200]}", failure_kind)
             status = "degraded"
             provider_name, model_name = "fallback", "degraded-template-v1"
             tokens = (0, 0, None)

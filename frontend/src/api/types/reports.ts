@@ -68,6 +68,12 @@ export interface FollowupAnswer {
   citations: number[]
   uncertainties: string[]
   safety_note: string
+  /**
+   * 降级时的原因分类（仅 status === 'degraded' 时存在）：
+   * - OUT_OF_SCOPE：这个问题超出本报告材料范围 → 引导重新生成报告
+   * - MODEL_UNAVAILABLE：模型侧没跑起来（未配置/上游失败/预算用尽）→ 引导稍后重试
+   */
+  reason_kind?: 'OUT_OF_SCOPE' | 'MODEL_UNAVAILABLE'
 }
 
 export interface FollowupOut {

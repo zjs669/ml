@@ -89,6 +89,29 @@ def _ask(client: TestClient, headers: dict[str, str], report_id: int, question: 
     )
 
 
+class _StubProvider:
+    """可控 Provider：返回预设 payload，用来触发校验失败分支。"""
+
+    name = "stub"
+    model = "stub-v1"
+
+    def __init__(self, payload: dict[str, Any]) -> None:
+        self.payload = payload
+
+    def generate_json(self, request):
+        from app.domains.llm.base import LLMResponse
+
+        return LLMResponse(
+            payload=self.payload,
+            provider=self.name,
+            model=self.model,
+            input_tokens=10,
+            output_tokens=10,
+            latency_ms=1,
+            finish_reason="stop",
+        )
+
+
 def test_followup_requires_login(client: TestClient) -> None:
     response = client.post("/api/v1/reports/1/followups", json={"question": "为什么？"})
     assert response.status_code == 401
@@ -149,6 +172,8 @@ def test_budget_exhaustion_degrades_without_calling_model(
     assert body["status"] == "degraded"
     assert body["model_provider"] == "fallback"
     assert any("预算" in text for text in body["answer"]["uncertainties"])
+    # 预算用尽属于「模型侧没跑起来」，不是「材料不够」：前端应引导稍后重试
+    assert body["answer"]["reason_kind"] == "MODEL_UNAVAILABLE"
     # 降级只复述原报告已核验的事实，不编造新句子
     assert body["answer"]["citations"] == []
 
@@ -168,3 +193,64 @@ def test_question_length_is_bounded(client: TestClient, knowledge: list[int]) ->
     report = _report(client, headers)
     assert _ask(client, headers, report["id"], "问").status_code == 422
     assert _ask(client, headers, report["id"], "问" * 501).status_code == 422
+
+
+def test_validation_failure_degrades_as_out_of_scope(
+    client: TestClient, knowledge: list[int], monkeypatch
+) -> None:
+    """模型答了但引用越界 → 属于「材料不够」，引导用户重新生成报告。
+
+    这是两类降级里更容易被误解的一类：用户看到「答不上来」会以为系统坏了，
+    于是反复重试同一个问题 —— 而重试永远不会成功，因为材料本来就没有。
+    """
+    headers = _signup(client)
+    report = _report(client, headers)
+
+    # 引用一个不在原报告 citations 里的 chunk_id，校验必然判死
+    bogus = max(knowledge) + 999
+    payload = {
+        "answer": "引用了不存在的片段。",
+        "points": [],
+        "citations": [bogus],
+        "uncertainties": [],
+        "safety_note": "仅供传统文化研习。",
+    }
+    stub = _StubProvider(payload)
+    monkeypatch.setattr(followup_service, "get_provider", lambda *a, **k: stub)
+
+    response = _ask(client, headers, report["id"], "这个报告里没提的问题？")
+    assert response.status_code == 201, response.text
+    body = response.json()
+    assert body["status"] == "degraded"
+    assert body["answer"]["reason_kind"] == "OUT_OF_SCOPE"
+
+
+def test_unconfigured_model_degrades_as_model_unavailable(
+    client: TestClient, knowledge: list[int], monkeypatch
+) -> None:
+    """模型没配置 → 属于「模型侧没跑起来」，引导稍后重试。"""
+    from app.domains.llm.base import LLMUnavailable
+
+    headers = _signup(client)
+    report = _report(client, headers)
+
+    def _boom(*args, **kwargs):
+        raise LLMUnavailable("未配置可用的大模型")
+
+    monkeypatch.setattr(followup_service, "get_provider", _boom)
+
+    response = _ask(client, headers, report["id"], "模型没配置时会怎样？")
+    assert response.status_code == 201, response.text
+    body = response.json()
+    assert body["status"] == "degraded"
+    assert body["answer"]["reason_kind"] == "MODEL_UNAVAILABLE"
+
+
+def test_reason_kind_maps_internal_kinds() -> None:
+    """内部失败原因到对外两类的映射，未知值保守归为「模型不可用」。"""
+    assert followup_service.reason_kind("validation") == "OUT_OF_SCOPE"
+    assert followup_service.reason_kind("budget") == "MODEL_UNAVAILABLE"
+    assert followup_service.reason_kind("upstream") == "MODEL_UNAVAILABLE"
+    assert followup_service.reason_kind("unconfigured") == "MODEL_UNAVAILABLE"
+    # 未知值：不引导用户重做报告（重做大概率也没用），让他先重试
+    assert followup_service.reason_kind("something_new") == "MODEL_UNAVAILABLE"

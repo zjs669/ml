@@ -21,13 +21,37 @@ const citationMap = computed(() => {
   return map
 })
 
-function citationLabel(ids: number[]): string[] {
-  return ids
-    .map((id) => {
-      const hit = citationMap.value.get(id)
-      return hit ? `[${id}] ${hit.citation_label}` : `[${id}]（引用缺失）`
-    })
-    .filter(Boolean)
+interface CiteRef {
+  id: number
+  label: string
+  /** 知识库里找不到的 chunk_id：正常链路上应为空，出现即说明报告被降级 */
+  missing: boolean
+}
+
+function citationRefs(ids: number[]): CiteRef[] {
+  return ids.map((id) => {
+    const hit = citationMap.value.get(id)
+    return {
+      id,
+      label: hit ? hit.citation_label : '引用缺失',
+      missing: !hit,
+    }
+  })
+}
+
+/**
+ * 点击引用徽章 → 滚到下方「引用来源」里对应的条目并高亮一下。
+ *
+ * 为什么值得做：后端把「每条解释都能指回原文」做成了硬约束（引用不存在直接判死），
+ * 但用户看不出这一点 —— 徽章只是一行灰字。能点、能跳、能看见原文，
+ * 「可追溯」才从后端属性变成用户能感知的信任信号。
+ */
+function jumpToCitation(chunkId: number): void {
+  const target = document.getElementById(`citation-${chunkId}`)
+  if (!target) return
+  target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  target.classList.add('cite-flash')
+  window.setTimeout(() => target.classList.remove('cite-flash'), 1200)
 }
 
 const missingCitations = computed(() =>
@@ -64,7 +88,17 @@ const missingCitations = computed(() =>
               <code v-for="rid in item.rule_ids" :key="rid" class="rule-id">{{ rid }}</code>
             </template>
             <template v-if="item.citation_ids.length">
-              <span v-for="label in citationLabel(item.citation_ids)" :key="label" class="cite">{{ label }}</span>
+              <button
+                v-for="ref in citationRefs(item.citation_ids)"
+                :key="ref.id"
+                type="button"
+                class="cite cite-btn"
+                :class="{ 'cite-missing': ref.missing }"
+                :title="ref.missing ? '该引用未在知识库中找到' : '点击查看原文'"
+                @click="jumpToCitation(ref.id)"
+              >
+                [{{ ref.id }}] {{ ref.label }}
+              </button>
             </template>
           </span>
         </li>
@@ -84,7 +118,17 @@ const missingCitations = computed(() =>
           <div class="claim">{{ item.claim }}</div>
           <div v-if="item.school_note" class="school-note">流派差异：{{ item.school_note }}</div>
           <div class="fact-meta">
-            <span v-for="label in citationLabel(item.citation_ids)" :key="label" class="cite">{{ label }}</span>
+            <button
+              v-for="ref in citationRefs(item.citation_ids)"
+              :key="ref.id"
+              type="button"
+              class="cite cite-btn"
+              :class="{ 'cite-missing': ref.missing }"
+              :title="ref.missing ? '该引用未在知识库中找到' : '点击查看原文'"
+              @click="jumpToCitation(ref.id)"
+            >
+              [{{ ref.id }}] {{ ref.label }}
+            </button>
           </div>
         </li>
       </ul>
@@ -199,6 +243,24 @@ const missingCitations = computed(() =>
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 6px;
+}
+
+.cite-btn {
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.cite-btn:hover {
+  background: #eef3fa;
+  border-color: #c3d4ea;
+  color: #2f5d94;
+}
+
+.cite-missing {
+  color: #a45f22;
+  background: #fdf3e8;
 }
 
 .rule-id,

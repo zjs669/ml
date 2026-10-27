@@ -19,7 +19,12 @@ defineProps<{
     <el-empty v-if="!citations.length" description="本次报告未引用知识库片段" :image-size="50" />
 
     <ol v-else class="items">
-      <li v-for="item in citations" :key="item.chunk_id">
+      <li
+        v-for="item in citations"
+        :id="`citation-${item.chunk_id}`"
+        :key="item.chunk_id"
+        class="citation-item"
+      >
         <div class="line">
           <span class="idx">[{{ item.chunk_id }}]</span>
           <span class="label">{{ item.citation_label }}</span>
@@ -56,6 +61,19 @@ defineProps<{
 
 .title {
   font-weight: 600;
+}
+
+.citation-item {
+  border-radius: 10px;
+  padding: 6px 8px;
+  margin: -6px -8px;
+  transition: background 0.4s;
+}
+
+/* 由 ReportSections 的 jumpToCitation 临时加上，滚动到位后闪一下再淡出 */
+.citation-item.cite-flash {
+  background: #fff8e6;
+  box-shadow: 0 0 0 2px #f0d9a8 inset;
 }
 
 .items {
