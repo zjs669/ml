@@ -79,7 +79,7 @@ jobs:
         run: pytest -q
 
   frontend:
-    name: 前端（typecheck + 路由/盘面冒烟）
+    name: 前端（typecheck + 构建 + 路由冒烟）
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -93,8 +93,11 @@ jobs:
         run: npm ci
       - name: 类型检查 + 构建
         working-directory: frontend
+        # npm run build = vue-tsc --noEmit && vite build，已含类型检查
         run: npm run build
-      - name: 路由与盘面冒烟
+      - name: 路由冒烟
         working-directory: frontend
-        # check:boards 需要后端生成的盘面样本；CI 里跳过盘面，只验路由表。
-        run: npm run typecheck && npm run check:routes
+        # 只验路由表：check:boards 需要 backend/var/board-facts.json，
+        # 那是本地跑 `python -m scripts.dump_board_facts` 生成的样本，
+        # 由 backend job 的 pytest（tests/test_board_facts.py）保证不漂移。
+        run: npm run check:routes
