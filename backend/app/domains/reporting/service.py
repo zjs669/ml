@@ -21,12 +21,10 @@ from app.domains.billing import ledger
 from app.domains.llm.base import LLMRequest, LLMResponse, LLMUnavailable
 from app.domains.llm.openai_compatible import get_provider
 from app.domains.llm.validator import FATAL, ValidationResult, validate
-from app.domains.reporting import coerce, fallback
+from app.domains.reporting import coerce, fallback, retrieval
 from app.domains.skills import skillfile
-from app.domains.skills.loader import SkillSpec
-from app.domains.skills.loader import resolve
-from app.models import ChartRecord
-from app.models import AiReport
+from app.domains.skills.loader import SkillSpec, resolve
+from app.models import AiReport, ChartRecord
 from app.repositories import chart_repo, knowledge_repo, llm_repo, report_repo
 
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
@@ -302,7 +300,15 @@ def generate(
     )
     spec = resolution.spec
 
-    topics = list(dict.fromkeys([*spec.retrieval.topics, *([topic] if topic else [])]))
+    # 检索词 = 盘面派生（这份盘真实触发的关系）+ 技能包声明（通用兜底）+ 用户指定
+    # 只用手写的静态词表会漏：bazi.relations.v1 声明的七个主题全是地支，
+    # 而 triggered_rules 里天干关系高频，导致天干条文永远召回不到。
+    derived_topics = retrieval.derive_topics(rules)
+    topics = retrieval.merge_topics(
+        declared=spec.retrieval.topics,
+        derived=derived_topics,
+        extra=[topic] if topic else [],
+    )
     chunks = knowledge_repo.search_topics(
         session, topics=topics, domain=chart.domain, limit=spec.retrieval.top_k
     )
