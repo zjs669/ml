@@ -24,6 +24,7 @@ from threading import Lock
 from fastapi import Request
 
 from app.core.config import settings
+from app.core import metrics
 from app.core.errors import AppError
 
 MAX_LOCK_MINUTES = 24 * 60
@@ -58,6 +59,7 @@ def hit(key: str, *, limit: int, window_seconds: int) -> None:
             bucket.popleft()
         if len(bucket) >= limit:
             retry = int(window_seconds - (now - bucket[0])) + 1
+            metrics.inc("rate_limit_hits_total", {"scope": "ip"})
             raise RateLimited(retry)
         bucket.append(now)
 
@@ -111,6 +113,7 @@ def check_locked(email: str) -> None:
     with _STATE_LOCK:
         state = _STATES.get(_key(email))
         if state and state.locked_until > now:
+            metrics.inc("rate_limit_hits_total", {"scope": "account"})
             raise AccountLocked(int(state.locked_until - now) + 1)
 
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import secrets
+import time
 from datetime import timedelta
 from typing import Any
 
@@ -12,6 +13,7 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_optional_user
+from app.core import metrics
 from app.core.db import get_session, utcnow
 from app.core.errors import AppError, NotFound
 from app.core.throttle import client_key, hit
@@ -168,13 +170,28 @@ def calculate(
     payload: CalculateIn,
     _: User | None = Depends(get_optional_user),
 ) -> dict:
-    """免登录计算：默认不落库，返回结构化盘面与触发规则。"""
-    result = calculate_bazi(payload, payload.convention)
+    """免登录计算：默认不落库，返回结构化盘面与触发规则。
+
+    这是 bazi 的专用入口（保留给已验收的前端契约），指标与通用入口对齐，
+    否则「按域看排盘量」会因为入口不同而漏掉四柱 —— 而四柱恰好是量最大的域。
+    """
+    started = time.perf_counter()
+    try:
+        result = calculate_bazi(payload, payload.convention)
+    except Exception:
+        metrics.inc("chart_generate_total", {"domain": "bazi", "result": "error"})
+        raise
+    metrics.inc("chart_generate_total", {"domain": "bazi", "result": "ok"})
+    metrics.observe(
+        "chart_generate_duration_seconds", time.perf_counter() - started, {"domain": "bazi"}
+    )
     return result.model_dump()
-
-
 def _calculate_payload(domain: str, payload: dict):
-    """按 domain 分派计算，并把 pydantic 校验错误统一成 INVALID_REQUEST。"""
+    """按 domain 分派计算，并把 pydantic 校验错误统一成 INVALID_REQUEST。
+
+    这里打排盘指标：成功/失败分开计，耗时按域分标签 —— 出问题时第一个要回答的
+    就是「哪个域慢了」还是「哪个域开始报错了」，两者混在一个指标里没法区分。
+    """
     spec = get_engine(domain)
     try:
         parsed = spec.input_model.model_validate(payload)
@@ -183,9 +200,19 @@ def _calculate_payload(domain: str, payload: dict):
             {"loc": ".".join(str(part) for part in err.get("loc", [])), "msg": err.get("msg", "")}
             for err in exc.errors()
         ]
+        metrics.inc("chart_generate_total", {"domain": domain, "result": "invalid"})
         raise AppError("INVALID_REQUEST", "请求参数不合法", status_code=422, details=details) from exc
-    return spec.calculate(parsed)
-
+    started = time.perf_counter()
+    try:
+        result = spec.calculate(parsed)
+    except Exception:
+        metrics.inc("chart_generate_total", {"domain": domain, "result": "error"})
+        raise
+    metrics.inc("chart_generate_total", {"domain": domain, "result": "ok"})
+    metrics.observe(
+        "chart_generate_duration_seconds", time.perf_counter() - started, {"domain": domain}
+    )
+    return result
 
 @router.post("/charts/{domain}/calculate")
 def calculate_any(

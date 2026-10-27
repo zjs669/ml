@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Header, Request
+from fastapi import APIRouter, Depends, Header, Query, Request
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
@@ -67,11 +67,19 @@ def get_report(
 @router.get("/charts/{chart_id}/reports", response_model=list[ReportListItem])
 def list_reports(
     chart_id: int,
+    limit: int = Query(default=20, ge=1, le=100),
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ) -> list[ReportListItem]:
+    """该盘的报告历史，按生成时间倒序。
+
+    只暴露 limit 不暴露 offset：报告历史是「最近 N 份」的语义，不是可翻阅的档案。
+    硬上限 100 防止恶意大分页；真要翻更早的，应该按时间范围查而不是深翻页。
+    """
     chart_repo.get_owned(session, chart_id=chart_id, owner_id=user.id)
-    items = report_repo.list_for_chart(session, chart_id=chart_id, user_id=user.id)
+    items = report_repo.list_for_chart(
+        session, chart_id=chart_id, user_id=user.id, limit=limit
+    )
     return [
         ReportListItem(
             id=item.id,
@@ -112,9 +120,14 @@ def create_followup(
 @router.get("/reports/{report_id}/followups", response_model=list[FollowupOut])
 def list_followups(
     report_id: int,
+    limit: int = Query(default=50, ge=1, le=100),
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ) -> list[FollowupOut]:
+    """追问历史，按 seq 升序（对话顺序）。
+
+    上限 100 略高于 MAX_TURNS=20：留出余量，避免以后调高轮次时这里静默截断。
+    """
     report_repo.get_owned(session, report_id=report_id, user_id=user.id)
-    rows = report_repo.list_followups(session, report_id=report_id)
+    rows = report_repo.list_followups(session, report_id=report_id, limit=limit)
     return [FollowupOut.model_validate(followup_service.serialize(row)) for row in rows]

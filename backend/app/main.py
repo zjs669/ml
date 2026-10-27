@@ -10,7 +10,7 @@ import logging
 from contextlib import asynccontextmanager
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
@@ -27,6 +27,7 @@ from app.api.v1 import (
 from app.core.config import settings
 from app.core.db import engine
 from app.core.errors import install_error_handlers
+from app.core import metrics
 from app.core.observability import RequestContextMiddleware, configure_logging
 
 logger = logging.getLogger("app.startup")
@@ -79,6 +80,34 @@ app.include_router(charts.share_router, prefix=settings.api_prefix)
 # 因此单独注册，而不是硬塞进某个带 prefix 的模块。
 app.include_router(me.feedback_router, prefix=settings.api_prefix)
 app.include_router(meta.mbti_router, prefix=settings.api_prefix)
+
+
+def _register_gauges() -> None:
+    """注册「取值时才计算」的 gauge。放在启动时注册，避免模块导入期就连数据库。"""
+
+    def _pool_in_use() -> float:
+        pool = engine.pool
+        # QueuePool 有 checkedout()；NullPool / StaticPool 没有，返回 0 而不是报错
+        checkedout = getattr(pool, "checkedout", None)
+        return float(checkedout()) if callable(checkedout) else 0.0
+
+    metrics.register_gauge(
+        "db_pool_in_use", "数据库连接池当前借出的连接数", _pool_in_use
+    )
+
+
+_register_gauges()
+
+
+@app.get("/metrics", tags=["meta"], include_in_schema=False)
+def prometheus_metrics() -> Response:
+    """Prometheus 文本格式指标。
+
+    刻意不挂在 /api/v1 下：运维系统按固定路径抓取，不该随业务前缀变化。
+    也刻意不鉴权：指标里只有路由模板与状态码，没有任何用户数据；
+    若部署到公网，应在 nginx 层限制来源 IP（见 infra/nginx.conf 的注释）。
+    """
+    return Response(content=metrics.render(), media_type="text/plain; version=0.0.4; charset=utf-8")
 
 
 @app.get("/healthz", tags=["meta"])

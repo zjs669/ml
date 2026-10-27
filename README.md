@@ -40,6 +40,7 @@ cd frontend && npm run dev      # 另开终端 → http://127.0.0.1:5173
 | 怎么跑起来、怎么测 | [§3 启动](#3-启动) · [§4 测试](#4-测试) |
 | 换日/年界/真太阳时怎么算 | [docs/口径说明.md](docs/口径说明.md) |
 | 数据库表与索引 | [docs/数据库.md](docs/数据库.md) |
+| 指标、日志、链路 ID | [docs/架构与验收.md §8](docs/架构与验收.md) · `GET /metrics` |
 | 技能库怎么写 | [backend/skills/README.md](backend/skills/README.md) |
 | 全部文档索引 | [docs/README.md](docs/README.md) |
 
@@ -172,6 +173,8 @@ cp .env.example .env
 npm install
 ```
 
+要完全复现验证过的版本（含 dev 依赖）：`pip install -r requirements.lock`。
+
 灌知识库（不灌也能排盘，只是报告没有可引用的原文）：
 
 ```bash
@@ -199,8 +202,9 @@ python -m app.domains.knowledge.ingest --domain ziwei --dir docs/知识源/ziwei
 ### 验证
 
 ```bash
-curl http://127.0.0.1:8000/healthz        # {"status":"ok","database":"ok"}
-curl http://127.0.0.1:8000/api/v1/meta/domains   # 16 个域
+curl http://127.0.0.1:8000/healthz              # {"status":"ok","database":"ok"}
+curl http://127.0.0.1:8000/api/v1/meta/domains  # 16 个域
+curl http://127.0.0.1:8000/metrics              # Prometheus 指标
 ```
 
 一条命令跑通全链路（注册→15 域排盘→报告→账本）：

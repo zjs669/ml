@@ -26,6 +26,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.types import ASGIApp
 
+from app.core import metrics
+
 _REDACT_PATTERNS = [
     (re.compile(r"(sk-[A-Za-z0-9_\-]{8,})"), "sk-***"),
     (re.compile(r"(?i)(api[_-]?key|authorization|token|password)\"?\s*[:=]\s*\"?([^\s\",}]+)"), r"\1=***"),
@@ -94,6 +96,15 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             raise
         duration = (time.perf_counter() - started) * 1000
         response.headers["x-request-id"] = request_id
+        # 按「路由模板」打标签而不是实际路径：/charts/123 归到 /charts/{chart_id}，
+        # 否则每个 id 都是一个新时间序列，指标内存会随用户增长一直涨。
+        route = request.scope.get("route")
+        route_path = getattr(route, "path", None) or "<unmatched>"
+        metrics.inc(
+            "http_requests_total",
+            {"route": route_path, "method": request.method, "status": str(response.status_code)},
+        )
+        metrics.observe("http_request_duration_seconds", duration / 1000, {"route": route_path})
         logger.info(
             "request",
             extra={

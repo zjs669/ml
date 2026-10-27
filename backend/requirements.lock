@@ -1,0 +1,36 @@
+# 锁定版本：保证不同机器 pip install 后依赖完全一致。
+#
+# 用法：
+#   pip install -r requirements.lock        # 复现当前验证过的版本
+#   pip install -e ".[dev]"                # 开发（跟随 requirements.txt 的 >= 约束）
+#
+# 为什么不用 uv / pip-tools：本项目依赖只有二十来个、且不涉及复杂的
+# 平台相关轮子解析。手工维护这份文件 + CI 跑一次即可，引工具链的
+# 学习成本高于收益。升级依赖时改这里，然后本地跑一遍全量测试。
+#
+# 版本取自 2026-10 本地验证通过的环境（1765 项测试 + ruff 全绿）。
+
+# ---- 运行时（与 requirements.txt 对应）----
+fastapi==0.162.0
+uvicorn[standard]==0.54.0
+pydantic==2.13.4
+pydantic-settings==2.14.2
+SQLAlchemy==2.1.6
+alembic==1.20.1
+PyMySQL==1.2.0
+argon2-cffi==25.1.0
+PyJWT==2.13.0
+cryptography==49.0.0
+httpx==0.28.1
+PyYAML==6.0.3
+python-multipart==0.0.32
+lunar-python==1.4.8
+Pillow==12.3.0
+
+# tzdata 只在 Windows 上需要（Linux 用系统 /usr/share/zoneinfo）。
+# 本地没装是因为 conda 环境自带时区库，容器镜像里必须显式装。
+tzdata==2026.1; sys_platform == "win32"
+
+# ---- 开发（与 pyproject.toml 的 [project.optional-dependencies].dev 对应）----
+pytest==8.4.2
+ruff==0.17.3

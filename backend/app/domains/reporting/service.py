@@ -15,6 +15,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from app.core import metrics
 from app.core.config import settings
 from app.core.db import utcnow
 from app.domains.billing import ledger
@@ -352,6 +353,7 @@ def generate(
     if response is not None and validation is not None and validation.ok and validation.payload:
         payload = validation.payload.model_dump()
         status = STATUS_COMPLETE
+        metrics.inc("llm_call_total", {"model": response.model, "result": "ok"})
         ledger.settle(session, reservation)
         provider_name = response.provider
         model_name = response.model
@@ -369,6 +371,8 @@ def generate(
             fatal_codes=(validation.fatal_codes if validation else None),
         )
         status = STATUS_DEGRADED
+        # 降级原因按 kind 分标签：区分「模型答错」与「预算用尽」是排查的第一步
+        metrics.inc("llm_fallback_total", {"reason": reason_kind or "unknown"})
         ledger.refund(session, reservation, reason="report_degraded")
         provider_name = "fallback"
         model_name = "degraded-template-v1"
