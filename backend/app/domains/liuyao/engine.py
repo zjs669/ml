@@ -109,7 +109,7 @@ def _hexagram_block(
 ) -> dict[str, Any]:
     lines = lines_payload(info, day_stem=day_stem, palace_element=palace_element)
     if values is not None:
-        for line, value in zip(lines, values):
+        for line, value in zip(lines, values, strict=False):
             line["value"] = value
             line["moving"] = value in MOVING_VALUES
     return {

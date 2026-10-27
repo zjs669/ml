@@ -108,7 +108,8 @@ def calculate(inp: TaiyiInput, conv: TaiyiConvention | None = None) -> ChartResu
     convention = conv or TaiyiConvention()
     warnings: list[str] = [SCHOOL_NOTE]
 
-    zone = _resolve_zone(inp.timezone)
+    # 只为校验时区是否合法：非法时区在这里就抛错，不要留到后面才炸
+    _resolve_zone(inp.timezone)
     lunar = _lunar_object(inp.date)
     lunar_date = solar_to_lunar(inp.date)
 

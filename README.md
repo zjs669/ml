@@ -1,12 +1,47 @@
-# 玄枢国学研习台（MVP）
+# 玄枢国学研习台
 
-把传统术数拆成**可核验的事实**与**可追溯的解释**：
+**命理排盘的事实层与解释层分离。**
 
-> 确定性引擎算事实 → 规则引擎判关系 → 知识库检索 → AI 只做解释 → 服务端校验引用与事实 → 存档与额度结算
+确定性引擎保证盘面事实可核验，知识库 + AI 只做可追溯的解释。
+当前覆盖 **16 个术数域**（四柱、紫微、六爻、奇门、大六壬、太乙、塔罗、占星、合盘…），
+每份报告都带 citation 指回典籍原文，模型编不出来的内容会被服务端拦下。
 
-当前已把同一闭环复用到 **16 个域**：四柱八字、紫微斗数（含运限/飞星）、六爻、奇门遁甲、黄历、小六壬、梅花易数、大六壬、太乙九星、塔罗、西洋占星、关系合盘、性格问卷、解梦，以及面相/手相两个视觉域。真实支付网关、向量检索、微调仍推迟。
+```mermaid
+flowchart LR
+  A[用户输入] --> B[确定性引擎<br/>排盘事实]
+  B --> C[规则引擎<br/>关系判定]
+  C --> D[知识库检索<br/>引用片段]
+  D --> E[AI 解释生成]
+  E --> F[服务端校验<br/>引用与事实]
+  F --> G[报告输出]
+  G -.追问.-> E
+```
+
+## 30 秒体验
+
+```bash
+docker start xuanshu-mysql      # 开发库（端口 3307）
+cd backend && python -m uvicorn app.main:app --reload --port 8000
+cd frontend && npm run dev      # 另开终端 → http://127.0.0.1:5173
+```
+
+一条命令同时起前后端：`python start.py`。首次安装见 [§3 启动](#3-启动)。
+
+不想本地装环境：`cd infra && docker compose up -d --build` → <http://localhost:8080>。
 
 ---
+
+## 目录
+
+| 想知道什么 | 看哪里 |
+| --- | --- |
+| 各域能算什么、边界在哪 | [§1 本期能做什么](#1-本期能做什么) · [§10 已知限制](#10-已知限制) |
+| 代码怎么组织 | [§2 目录结构](#2-目录结构) · [docs/架构与验收.md](docs/架构与验收.md) |
+| 怎么跑起来、怎么测 | [§3 启动](#3-启动) · [§4 测试](#4-测试) |
+| 换日/年界/真太阳时怎么算 | [docs/口径说明.md](docs/口径说明.md) |
+| 数据库表与索引 | [docs/数据库.md](docs/数据库.md) |
+| 技能库怎么写 | [backend/skills/README.md](backend/skills/README.md) |
+| 全部文档索引 | [docs/README.md](docs/README.md) |
 
 ## 1. 本期能做什么
 
@@ -20,7 +55,7 @@
 | 四柱反查 | 给定任意几柱 + 年份范围，反查公历日期与时窗；与 `calculate()` 严格互逆（500 例往返测试锁死），候选可一键保存并生成解读 |
 | 关系 | **66 条**规则：三会/三合/六合/半会/六冲/三刑/相刑/自刑/相害/相破/天干五合/天干相冲/天干相克，每条带 `rule_id` 与来源，**只报触发不报吉凶** |
 | 口径 | `year_boundary` / `day_boundary` / `solar_time` / `school` 四项可选，结果回显并随命盘存档 |
-| 知识库 | `knowledge_sources` + `knowledge_chunks`，MySQL ngram 全文检索，只返回已审核条目 |
+| 知识库 | `knowledge_sources` + `knowledge_chunks`，MySQL ngram 全文检索，只返回已审核条目；检索词由**盘面触发的规则派生**（`reporting/retrieval.py`），不靠手写固定词表 |
 | 技能库 | `skill_versions` 版本化发布，禁止覆盖旧版本 |
 | AI 报告 | Provider Adapter（默认 Mock，可切 OpenAI 兼容真实模型）+ Schema 校验 + 引用存在性 + 事实一致性（按 domain 分派）+ 禁词扫描 + 一次受控重试 + 降级模板 |
 | 报告追问 | `POST /reports/{id}/followups`：只依据「原报告 + 原盘面 + 原引用」续答，复用同一套校验链；同一报告 ≤ 20 轮，不扣额度但受限流与日预算约束；不合格时返回确定性降级回复 |
@@ -47,7 +82,7 @@
 ```
 backend/
   app/
-    core/               config / db / errors / logging / security / ratelimit
+    core/               config / db / errors / security / throttle（限流+登录锁定）/ observability（日志+请求上下文）/ mailer / secrets
     api/v1/             auth charts reports knowledge billing me feedback meta reverse vision mbti
     domains/
       calendar_core/    儒略日、甲子、节气（Meeus + lunar-python 双源）、真太阳时、太阳视黄经
@@ -70,17 +105,17 @@ backend/
       vision/           面相 / 手相：提示词 + 分析编排（无确定性算法）
       registry.py       术数注册表：domain → 入参模型 + 计算函数 + kind + schools
       relations/        规则 YAML + 规则引擎（支持自定义位置名以复用跨盘判定）
-      knowledge/        ingest 与检索
+      knowledge/        ingest（Markdown → chunks，含审核态）
       skills/           任务包（packages）+ SKILL.md 加载器（skillfile）
       llm/              Provider 抽象、Mock、OpenAI 兼容（含视觉多模态）、validator
-      reporting/        报告编排、提示词、降级模板
+      reporting/        报告编排、检索主题派生（retrieval.py）、提示词、降级模板
       billing/          plans / ledger / orders / webhooks
     services/           media.py（MIME 校验 / 剥 EXIF / 内容寻址 / 留存期清理）、export.py
     models/ schemas/ repositories/
-  alembic/              5 条迁移（init → llm_calls → auth_tokens → report_followups → chart_media）
-  tests/                1700+ 项：16 域引擎、跨域报告链路、反查往返、追问、技能注入、架构守卫、盘面/路由一致性、JWT 攻击面、并发与幂等
-  scripts/              crosscheck、smoke_api、smoke_e2e（15 域）、prepare_bench、bench_eval、bench_stats、distill_skills、distill_round、encrypt_secrets、admin（子命令：approve/publish-skill/mark-paid/cleanup）
-  data/bench/           本地题库与错例集（体积大、许可证各异，已 gitignore）
+  alembic/              6 条迁移（init → llm_calls → auth_tokens → report_followups → chart_media → email_verification_codes）
+  tests/                1750+ 项：16 域引擎、跨域报告链路、检索主题派生、反查往返、追问、技能注入、架构守卫、盘面/路由一致性、JWT 攻击面、并发与幂等
+  scripts/              crosscheck、smoke_api、smoke_e2e（15 域）、prepare_bench、bench_eval、bench_stats、distill_skills、distill_round、encrypt_secrets、admin（子命令：approve / publish-skill / mark-paid / cleanup）
+  data/                运行时产物（var/、日志），不入库
   skills/               每次 AI 调用前必读的 SKILL.md（全局 + 16 域）
 frontend/
   src/api/              axios 封装 + 按域客户端（about/meta/mbti/vision/…）
@@ -314,7 +349,8 @@ python -m scripts.encrypt_secrets           # 加密并把明文改成 enc:v1:..
 | 限流与登录锁定是进程内计数 | 单机够用；多 worker / 多机部署前必须换 Redis 或落库 |
 | access token 存在 `sessionStorage` | 已是短 TTL + 每标签页隔离；残余 XSS 风险已记录，未做 BFF |
 | 真实模型单份报告约 20–40 秒 | 模型侧耗时（brief 约 2–4k 输出 token）；`eval_reports` 会记录 P50/P95 |
-| 追问不重新检索知识 | 只能引用原报告已引用的片段；这是为了前后口径一致，新疑点请重新生成报告 |
+| 追问不重新检索知识 | 只能引用原报告已引用的片段；这是为了前后口径一致，新疑点请重新生成报告。因此**报告检索漏了什么，追问就答不了什么** —— 检索词由盘面规则派生，见 `domains/reporting/retrieval.py` |
+| 天干相克无独立典籍条目 | 知识库里相克的判据寄生在《渊海子平·天干相冲》中（「同阴阳而相克」），检索如实指向相冲，不假装有独立依据 |
 | 紫微大限/流年四化需手动填年龄与年份 | 未填时不出该层，也**不推断**年龄；填了才按大限宫干/流年干各推一组 |
 | 同一幂等键的首次写入存在极小并发窗口 | 唯一约束保证不会重复扣费；极端并发下客户端可能收到一次 500，重试即读到同一行账本 |
 | 大六壬只实现贼克法三传 | 复杂课体三传留空并在 `san_chuan_status.reason` 写明原因 |

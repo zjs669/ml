@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+# 同一分支的新提交取消上一次还在跑的任务，省 runner 也省等待
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------- 架构守卫
+  # 单独成 job 且最先跑：依赖方向的约束一旦破了，后面所有测试通过也没意义。
+  # 放在前面能在 30 秒内给出结论，不用等 45 秒的 MySQL 起来。
+  architecture:
+    name: 架构守卫
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: 安装依赖
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: 依赖方向与纯域约束
+        working-directory: backend
+        run: pytest tests/test_architecture.py -q
+
+  backend:
+    name: 后端（lint + 全量测试）
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: xuanshu
+          MYSQL_USER: xuanshu_app
+          MYSQL_PASSWORD: XuanShuDev_2026
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+          --character-set-server=utf8mb4
+          --collation-server=utf8mb4_unicode_ci
+    env:
+      # 本地开发库在 3307（Docker 映射），CI 里用 service 的标准 3306。
+      # 两个都要设：conftest 用 TEST_DATABASE_URL 建测试库。
+      DATABASE_URL: mysql+pymysql://xuanshu_app:XuanShuDev_2026@127.0.0.1:3306/xuanshu?charset=utf8mb4
+      TEST_DATABASE_URL: mysql+pymysql://xuanshu_app:XuanShuDev_2026@127.0.0.1:3306/xuanshu_test?charset=utf8mb4
+      SECRET_KEY: ci-only-secret-key-at-least-32-bytes-long
+      RATELIMIT_ENABLED: "true"
+      MAIL_MODE: console
+      LLM_MODE: mock
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: 安装依赖
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]" ruff
+      - name: Lint（ruff）
+        working-directory: backend
+        run: ruff check app tests scripts
+      - name: 全量测试
+        working-directory: backend
+        run: pytest -q
+
+  frontend:
+    name: 前端（typecheck + 路由/盘面冒烟）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: 安装依赖
+        working-directory: frontend
+        run: npm ci
+      - name: 类型检查 + 构建
+        working-directory: frontend
+        run: npm run build
+      - name: 路由与盘面冒烟
+        working-directory: frontend
+        # check:boards 需要后端生成的盘面样本；CI 里跳过盘面，只验路由表。
+        run: npm run typecheck && npm run check:routes

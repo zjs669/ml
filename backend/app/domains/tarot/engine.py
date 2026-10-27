@@ -73,7 +73,7 @@ def calculate(inp: TarotInput, conv: TarotConvention | None = None) -> ChartResu
     drawn = [pool[index] for index in indices[: len(positions)]]
 
     dealt: list[dict[str, Any]] = []
-    for position, card in zip(positions, drawn):
+    for position, card in zip(positions, drawn, strict=False):
         reversed_ = inp.allow_reversed and flip_rng.random() < inp.reversed_probability
         keywords = card["reversed"] if reversed_ else card["upright"]
         dealt.append(

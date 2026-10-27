@@ -50,7 +50,8 @@ def calculate(inp: AlmanacInput, conv: AlmanacConvention | None = None) -> Chart
     convention = conv or AlmanacConvention()
     warnings: list[str] = []
 
-    zone = _resolve_zone(inp.timezone)
+    # 只为校验时区是否合法：非法时区在这里就抛错，不要留到后面才炸
+    _resolve_zone(inp.timezone)
     target = inp.date
     lunar = _lunar_object(target)
     lunar_date = solar_to_lunar(target)

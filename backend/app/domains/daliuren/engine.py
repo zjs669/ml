@@ -325,7 +325,8 @@ def calculate(inp: DaliurenInput, conv: DaliurenConvention | None = None) -> Cha
     convention = conv or DaliurenConvention()
     warnings: list[str] = [C.SCHOOL_NOTE]
 
-    zone = _resolve_zone(inp.timezone)
+    # 只为校验时区是否合法：非法时区在这里就抛错，不要留到后面才炸
+    _resolve_zone(inp.timezone)
     local_dt = inp.cast_datetime
     lunar = solar_to_lunar(local_dt)
     lunar_obj = _lunar(local_dt.date())

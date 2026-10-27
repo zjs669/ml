@@ -115,7 +115,7 @@ def test_changed_flips_exactly_one_line() -> None:
         facts = _run(method="hexagram", upper="坎", lower="离", moving_line=moving)
         before = facts["original"]["bits"]
         after = facts["changed"]["bits"]
-        diff = [i for i, (a, b) in enumerate(zip(before, after)) if a != b]
+        diff = [i for i, (a, b) in enumerate(zip(before, after, strict=False)) if a != b]
         assert diff == [moving - 1], f"动爻 {moving} 的变卦差异位不对：{diff}"
 
 

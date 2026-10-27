@@ -104,7 +104,7 @@ def test_shi_ying_positions_follow_palace_rule() -> None:
     """世爻：本宫在上爻、一世至五世即该世数、游魂在四、归魂在三；应爻与世相隔三位。"""
     for palace, names in PALACE_SEQUENCE.items():
         expected_shi = [6, 1, 2, 3, 4, 5, 4, 3]
-        for name, shi in zip(names, expected_shi):
+        for name, shi in zip(names, expected_shi, strict=False):
             info = NAME_TO_INFO[name]
             assert info.shi == shi, name
             assert info.ying == (shi + 3 if shi <= 3 else shi - 3), name

@@ -75,7 +75,7 @@ def process(path: Path, keys: tuple[str, ...], *, check_only: bool) -> int:
     if check_only:
         if plaintext:
             print(f"\n共 {len(plaintext)} 项仍是明文：{', '.join(plaintext)}")
-            print(f"执行 `python -m scripts.encrypt_secrets` 加密；主密钥放在 SECRETS_MASTER_KEY。")
+            print("执行 `python -m scripts.encrypt_secrets` 加密；主密钥放在 SECRETS_MASTER_KEY。")
             return 1
         print("\n全部已加密。")
         return 0
@@ -89,7 +89,7 @@ def process(path: Path, keys: tuple[str, ...], *, check_only: bool) -> int:
     path.write_text("".join(lines), encoding="utf-8")
     print(f"\n已写回 {path}（备份：{backup.name}）")
     print(f"⚠ {backup.name} 里仍是**明文**密钥（仅供回滚），确认服务正常后请删除；“已加入 .gitignore”并不等于“已安全”。")
-    print(f"主密钥提示：SECRETS_MASTER_KEY 未配置时会退回 SECRET_KEY 派生；生产环境必须显式配置。")
+    print("主密钥提示：SECRETS_MASTER_KEY 未配置时会退回 SECRET_KEY 派生；生产环境必须显式配置。")
     print(f"密文前缀：{PREFIX}")
     return 0
 

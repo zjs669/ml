@@ -107,10 +107,10 @@ def main(argv: list[str] | None = None) -> int:
     card = [
         "# MingLi-Bench 数据集卡片",
         "",
-        f"- 来源：`https://github.com/DestinyLinker/MingLi-Bench`（MIT，数据源自 2022–2025 全球算命师大赛）",
+        "- 来源：`https://github.com/DestinyLinker/MingLi-Bench`（MIT，数据源自 2022–2025 全球算命师大赛）",
         f"- 题目：{len(cases)} 道四选一，覆盖 {len(by_case)} 个命例",
         f"- 切分：按命例 {args.ratio:.0%} / {1 - args.ratio:.0%}，seed={args.seed}",
-        f"- 归一化：`scripts/bench/mingli.py`；评测：`scripts/bench_eval.py --dataset mingli_bench`",
+        "- 归一化：`scripts/bench/mingli.py`；评测：`scripts/bench_eval.py --dataset mingli_bench`",
         "",
         "## 字段",
         "",
